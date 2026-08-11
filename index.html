@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KP Simulator - Prüfungskommission</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+
+        .header p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 6px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .progress-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--border);
+            border-color: var(--primary);
+        }
+
+        .btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            border-color: var(--warning);
+            color: #000;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .case-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .case-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .case-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .question-block {
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .rating-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .rating-section.show {
+            display: block;
+        }
+
+        .rating-title {
+            font-weight: bold;
+            color: var(--success);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .rating-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        #feedback {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #feedback.show {
+            display: block;
+        }
+
+        .feedback-header {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feedback-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feedback-q-text {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .feedback-answer {
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .completion-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .completion-score {
+            font-size: 80px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .export-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .export-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+            }
+
+            .case-container {
+                padding: 15px;
+            }
+
+            .completion-score {
+                font-size: 60px;
+            }
+
+            textarea {
+                min-height: 80px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🏥 KP Simulator</h1>
+                <p>Prüfungskommission - Medical Exam Practice</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="completedCount">0</span>
+                    <span class="stat-label">Erledigt</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="totalCount">49</span>
+                    <span class="stat-label">Gesamt</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="progressPct">0%</span>
+                    <span class="stat-label">Fortschritt</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Gesamtfortschritt</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>📊 Fortschritt verwalten</h3>
+            <div class="export-buttons">
+                <button class="btn btn-primary" onclick="exportProgress()">📥 Fortschritt exportieren</button>
+                <button class="btn btn-primary" onclick="importProgress()">📤 Fortschritt importieren</button>
+                <button class="btn btn-warning" onclick="resetProgress()">🔄 Alles zurücksetzen</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">Modus wählen:</h3>
+            <div class="mode-selector">
+                <button class="btn btn-primary active" onclick="switchMode('single')">Einzelfall</button>
+                <button class="btn" onclick="switchMode('practice')">Trainingssession</button>
+                <button class="btn" onclick="switchMode('failed')">Nur Fehlgeschlagen</button>
+                <button class="btn" onclick="switchMode('all')">Alle durchgehen</button>
+            </div>
+        </div>
+
+        <div id="caseContainer"></div>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        // All 49 cases with answers (Musterlösungen)
+        const allCases = [
+            {id: 1, fach: "Kardiologie", diagnose: "Herzinsuffizienz", anamnese: "68J männlich, bekannt: Hypertonie, Diabetes. Seit 1 Woche progressive Dyspnoe, nächtliche Atemnot, beidseitige Knöchelödeme.", koerperlich: "Rasselgeräusche basal, Halsvenenstaung, Hepatomegalie", vitale: "RR 170/95, HF 112/min, AF 24/min, SpO2 88%, T 36,8°C", labor: "BNP 850 pg/mL, Troponin 0,08, Kreatinin 1,5", bildgebung: "EKG: VHF, ST-Senkung. CXR: Kardiomegalie, Kerley-B", q: ["Diagnose und DD?", "Einfluss VHF?", "Akute Therapie?", "Troponin-Bedeutung?"], answers: ["HFrEF mit VHF. DD: AKS, Myokarditis, PE", "VHF senkt CO. Braucht Frequenzkontrolle + Antikoagulation", "O2, Diuretika, Nitroglyzerin, Monitoring", "NSTEMI oder Demand Ischemia"]},
+            {id: 2, fach: "Kardiologie", diagnose: "STEMI inferior", anamnese: "55J männlich, Raucher. Brustschmerz vor 40 Min, Diaphorese", koerperlich: "Angst, Distress, regelmäßiger Herzrhythmus", vitale: "RR 128/78, HF 98/min, SpO2 97%", labor: "Troponin 0,02, CK-MB 8,5", bildgebung: "EKG: ST-Hebung II, III, aVF", q: ["Infarkttyp und Arterie?", "Komplikationen?", "Reperfusion-Optionen?", "Nitrat-Kontraindikation?"], answers: ["Inferior STEMI, RCA Verschluss", "AV-Block, kardiogener Schock, RV-Infarkt", "Primäre PCI <90min", "Nitrate bei RV-Infarkt KONTRAINDIZIERT"]},
+            {id: 3, fach: "Kardiologie", diagnose: "Vorhofflimmern mit RVR", anamnese: "71J weiblich, HTN. Palpitationen und Dyspnoe", koerperlich: "Tachykard, unregelmäßiger Rhythmus", vitale: "RR 145/88, HF 135/min, SpO2 95%", labor: "BNP 180, Troponin normal", bildgebung: "EKG: Absolutes Arrhythmie", q: ["VHF mit RVR Definition?", "CHA2DS2-Score?", "Frequenz vs Rhythmus?", "Medikamentöse Optionen?"], answers: ["VHF Rate >110/min", "Score 3 - Antikoagulation INDIZIERT", "Initial Frequenzkontrolle", "Metoprolol, Diltiazem, Verapamil"]},
+            {id: 4, fach: "Chirurgie", diagnose: "Diverticulitis Grad I", anamnese: "62J weiblich, LUQ-Schmerz 2 Tage, frühere Episoden", koerperlich: "Abwehrspannung LUQ, Loslaßschmerz positiv", vitale: "RR 128/76, T 37,8°C", labor: "Leukozyten 14.200, CRP 8,5", bildgebung: "CT: entzündetes Divertikel, keine Perforation", q: ["Hinchey Grad?", "Konservativ oder OP?", "Therapie?", "Sigmaresektion?"], answers: ["Grad I: lokalisierte Entzündung", "Konservativ: stabil, kein Abszess", "AB IV + NPO + Hydration", "Elektiv nach 4-6 Wochen"]},
+            {id: 5, fach: "Chirurgie", diagnose: "Perforiertes Magenulkus", anamnese: "68J männlich, NSAR-Einnahme. Massiver Schmerz vor 2h", koerperlich: "Bretbauch, generalisierte Abwehrspannung, Schock", vitale: "RR 102/62, HF 126/min, SpO2 94%", labor: "Leukozyten 16.800, Laktat 2,8", bildgebung: "Freie Luft unter Zwerchfell", q: ["Diagnose?", "Notfall-OP?", "Chirurgische Technik?", "Komplikationen?"], answers: ["Perforiertes Magenulkus mit Pneumoperitoneum", "JA - sofort OP", "Primäre Reparatur + Omentoplastie", "Sepsis, Dehiszenz, Pankreatfistel"]},
+            {id: 6, fach: "Chirurgie", diagnose: "Primär spontaner Pneumothorax", anamnese: "22J männlich, plötzlich Thoraxschmerz", koerperlich: "Tachypnoe, Atmung leise, Hypersonorität", vitale: "RR 128/75, HF 105/min, SpO2 94%", labor: "pO2 85, pCO2 35", bildgebung: "Viscerales Pleura-Linie, kleine PSX <2cm", q: ["Klassifizierung?", "Konservativ oder Drainage?", "Katheter-Details?", "Entlassung?"], answers: ["Kleine primär-spontane PSX", "Konservativ: Beobachtung", "Small bore catheter 16-20F", "Nach Reexpansion, Follow-up CXR"]},
+            {id: 7, fach: "Neurologie", diagnose: "Akuter ischämischer Schlaganfall", anamnese: "74J männlich, erwacht mit Paresen + Sprachstörung 90 min", koerperlich: "NIHSS 8: Aphasie, Fazialischwäche, Armparese", vitale: "RR 162/92, SpO2 96%", labor: "Glucose 145, INR 0,9", bildgebung: "CT: keine Blutung. MRT: frische Ischämie MCA", q: ["Eignung rtPA?", "Ätiologie?", "Management?", "RR-Kontrolle?"], answers: ["Ja: 90min <4.5h, keine KI", "Kardiale Embolie (VHF)", "rtPA 0.9mg/kg IV", "Vorsicht Überkorrektion, Ziel <180"]},
+            {id: 8, fach: "Notfallmedizin", diagnose: "Septischer Schock", anamnese: "71J weiblich, rezidivierende HWI. Verwirrtheit, Schocksymptome", koerperlich: "Verwirrtheit, marmorierte Haut, kalte Extremitäten", vitale: "RR 92/56, HF 118, SpO2 94%, Laktat 3,2", labor: "Leukozyten 18.500, Thrombozyten 95.000, Kreatinin 2,1", bildgebung: "Bilaterale Infiltrate, Hydronephrose", q: ["Sepsis/Schock Definition?", "Infektionsquelle?", "6-Stunden-Bundle?", "Vasopressor?"], answers: ["Sepsis + Hypotension + Organdysfunktion", "Urosepsis (HWI + Hydronephrose)", "Blutkultur, AB, Bolus, Vasopressor, Drainage", "Ceftriaxon + Gentamicin"]},
+            {id: 9, fach: "Gastroenterologie", diagnose: "Akute Cholezystitis", anamnese: "45J weiblich, RUQ-Schmerz nach Mahlzeit", koerperlich: "RUQ-Druckschmerz, Murphy-Zeichen positiv", vitale: "RR 138/84, T 37,9°C", labor: "Leukozyten 12.500, AP 140", bildgebung: "Sonographie: Steine, Wandverdickung, Murphy+ ", q: ["Diagnose?", "Management?", "Operative Technik?", "Komplikationen?"], answers: ["Akute Cholezystitis", "Elektiv OP in 2 Wochen, initial AB", "Laparoskopisch", "Perforation, Pankreatitis, Cholangitis"]},
+            {id: 10, fach: "Infektiologie", diagnose: "Bakterielle Pneumonie", anamnese: "68J männlich, Husten 5 Tage, Dyspnoe", koerperlich: "Rasselgeräusche rechts basal, Stimmfremitus ↑", vitale: "RR 138/84, HF 105, SpO2 93%, T 38,9°C", labor: "Leukozyten 14.200, CRP 12", bildgebung: "Konsolidation rechts basal", q: ["CAP Klassifizierung?", "Erreger und AB?", "Aufnahme-Kriterien?", "Komplikationen?"], answers: ["CAP, CURB-65: Low, PSI moderate", "Community-Erreger, Amoxicillin oder Cephalosporin", "PSI III-V, SpO2 <94%", "Pleuraerguss, Abszess"]},
+            {id: 11, fach: "Urologie", diagnose: "Urolithiasis mit Kolik", anamnese: "42J männlich, plötzlich Flankenschmerz", koerperlich: "CVA-Schmerz positiv", vitale: "RR 138/88, HF 104", labor: "Hämaturie 3+, Harnsäure 7,8", bildgebung: "CT: 6mm Stein Ureter", q: ["Diagnose und Typ?", "Prognose?", "Schmerztherapie?", "Prävention?"], answers: ["Urolithiasis Harnsäure", "6mm = spontane Passage 85-95%", "NSAR", "Hydration, Allopurinol, Alkalisierung"]},
+            {id: 12, fach: "Neurologie", diagnose: "Subarachnoidalblutung", anamnese: "58J weiblich, plötzlicher unerträglicher KS", koerperlich: "Nackensteifigkeit, Kernig-Zeichen positiv", vitale: "RR 168/98, HF 102", labor: "normal", bildgebung: "CT: Blut Zisternen", q: ["Diagnose und Hunt-Hess?", "Diagnostik?", "Vasospasmus?", "Therapie?"], answers: ["SAB, Hunt-Hess Grad 3", "CT-Angiografie oder DSA", "Nimodipina 60mg", "Early Reparatur"]},
+            {id: 13, fach: "Unfallchirurgie", diagnose: "Unterschenkeltraumata", anamnese: "28J männlich, Motorradunfall, offene Wunde", koerperlich: "Schwellung, Hämatom", vitale: "normal", labor: "normal", bildgebung: "Tibia+Fibula Fraktur, Gustilo II", q: ["Klassifizierung?", "Erste Hilfe?", "ORIF?", "Komplikationen?"], answers: ["Gustilo II", "Tetanus, AB, Reposition", "Intramedullär Nagel", "Osteomyelitis, delayed union"]},
+            {id: 14, fach: "Gastroenterologie", diagnose: "Peptisches Ulkus", anamnese: "52J männlich, Epigastriale Schmerz, NSAR-Einnahme", koerperlich: "Epigastrische Druckschmerzhaftigkeit", vitale: "normal", labor: "Hb 12,0", bildgebung: "ÖGD: Magenulkus, H. pylori+", q: ["Ätiologie?", "Therapie?", "Kontroll-EGD?", "Rezidiv-Prävention?"], answers: ["NSAR + H. pylori", "PPI + H. pylori Eradikation", "Nur wenn >1cm", "Continuous PPI"]},
+            {id: 15, fach: "Angiologie", diagnose: "Periphere arterielle Verschlusskrankheit", anamnese: "68J männlich, Claudicatio intermittens >200m", koerperlich: "Femoralpuls schwach", vitale: "RR 155/90", labor: "LDL 160", bildgebung: "ABI 0,65", q: ["Klassifizierung?", "Konservativ oder PTA?", "Statine?", "Komplikationen?"], answers: ["pAVK Stadium II", "Gehtraining, Smoking-Cessation, PTA wenn Versagen", "LDL <70", "Critical-Ischemia in 5 Jahren"]},
+            {id: 16, fach: "Gastroenterologie", diagnose: "Akute Pankreatitis", anamnese: "54J männlich, Epigastrischer Schmerz, heavy drinker", koerperlich: "Epigastrische Druckschmerzhaftigkeit", vitale: "RR 135/82, T 38,1°C", labor: "Amylase 520, Lipase 850", bildgebung: "CT: ödematöse Pankreatitis", q: ["Diagnose und Ätiologie?", "Schweregrad?", "Therapie?", "Komplikationen?"], answers: ["Akute Pankreatitis, Alkoholisch", "Ransons mild (2 Punkte)", "NPO → Diät, IV-Hydration", "Pseudocyst, Abszess"]},
+            {id: 17, fach: "Urologie", diagnose: "Akute Zystitis", anamnese: "35J weiblich, Dysturie, Pollakisurie", koerperlich: "unauffällig", vitale: "normal", labor: "Urinalyse: Leukozyten+, Nitrit+", bildgebung: "keine", q: ["Diagnose?", "Erreger?", "Antibiotika?", "Dauer und Rezidiv?"], answers: ["Unkomplizierte Zystitis", "E. coli 80%", "Fosfomycin 3g single oder Nitrofurantoin", "3 Tage"]},
+            {id: 18, fach: "Notfallmedizin", diagnose: "Pulmonale Embolie", anamnese: "58J weiblich, Flug 8h, plötzlich Dyspnoe", koerperlich: "Tachypnoe, Tachykardie", vitale: "RR 98/62, HF 125, SpO2 88%", labor: "D-Dimer↑, Troponin↑, BNP↑", bildgebung: "CT-PA: Rechte A1-Emboli", q: ["Massive PE?", "RV-Strain?", "Antikoagulation?", "Thrombolyse?"], answers: ["Massive PE mit Schock", "Troponin↑ = Myokardiale Verletzung", "UFH oder LMWH", "Thrombolyse bei Hypotension"]},
+            {id: 19, fach: "Chirurgie", diagnose: "Aortendissektion Typ A", anamnese: "62J männlich, reißender Thoraxschmerz", koerperlich: "Hypertensiv, Angst", vitale: "RR 200/110, HF 105", labor: "D-Dimer↑↑", bildgebung: "CT: Dissektion Aorta ascendens", q: ["Typ und Ursache?", "Notfall-Management?", "BP-Ziel?", "Komplikationen?"], answers: ["Typ A - NOTFALL", "Notfall-OP", "100-120 systolisch", "Koronare Dissektion"]},
+            {id: 20, fach: "Endokrinologie", diagnose: "Diabetische Ketoazidose", anamnese: "28J weiblich, DM1, Polyurie, Übelkeit", koerperlich: "Verwirrtheit, Kussmaul-Atmung", vitale: "RR 112/70, AF 28", labor: "Glucose 580, pH 7.25, Ketone++", bildgebung: "normal", q: ["DKA Diagnose?", "Pathophysiologie?", "Therapie?", "Komplikationen?"], answers: ["Glucose↑ + pH↓ + Ketone++", "Insulinmangel → Ketone↑", "Flüssigkeiten ZUERST, dann Insulin", "Hirn-Ödem, Hypoglykämie"]},
+            {id: 21, fach: "Pulmonologie", diagnose: "COPD-Exazerbation", anamnese: "72J männlich, COPD GOLD IV, zunehmende Dyspnoe", koerperlich: "Tachypnoe, Wheezing", vitale: "RR 92/58, HF 118, SpO2 85%, AF 28", labor: "pCO2 58, pH 7.32", bildgebung: "CXR: Überblähung", q: ["Schweregrad?", "O2-Therapie?", "Bronchodilatatoren?", "Ventilation?"], answers: ["COPD Typ II Atemversagen", "FiO2 vorsichtig, Target 88-92%", "Albuterol + Ipratropium", "BiPAP zuerst"]},
+            {id: 22, fach: "Endokrinologie", diagnose: "Primäre Hypothyreose", anamnese: "58J weiblich, Müdigkeit, Gewichtszunahme", koerperlich: "Bradykardie, trockene Haut, Goiter", vitale: "RR 130/88, HF 52", labor: "TSH 15.8, T4 2.1, TPO+", bildgebung: "Sonographie: Vergrößerung", q: ["Diagnose?", "Ätiologie?", "Dosierung?", "Überbehandlung?"], answers: ["Primäre Hypothyreose", "Hashimoto (TPO+)", "Levothyroxin 25-50 μg/d", "Vorhofflimmern, Osteoporose"]},
+            {id: 23, fach: "Pulmonologie", diagnose: "Pleuraerguss", anamnese: "62J männlich, HI bekannt, Dyspnoe", koerperlich: "Ödeme, JVD, Rasselgeräusche", vitale: "RR 160/100, AF 20", labor: "BNP 850", bildgebung: "Blunting bilateral", q: ["Transsudat vs Exsudat?", "DD?", "Analyse?", "Therapie?"], answers: ["Transsudat wahrscheinlich (HI)", "HI primär verdächtig", "Protein, LDH, Kultur", "Diuretika"]},
+            {id: 24, fach: "Endokrinologie", diagnose: "Metabolisches Syndrom", anamnese: "55J männlich, zentrale Adipositas", koerperlich: "Übergewicht, BMI 32, Taille 108cm", vitale: "RR 145/92", labor: "Glucose 110 (IFG), TG 280, HDL 35", bildgebung: "HOMA↑", q: ["MetS Diagnose?", "Insulinresistenz?", "Lifestyle?", "Therapie?"], answers: ["Zentrale Adipositas + HTN + abnormale Glukose", "Insulinresistenz → Dyslipidämie", "10-15% Gewichtsverlust, Med-Diät", "Metformin, Statine"]},
+            {id: 25, fach: "Angiologie", diagnose: "Tiefe Venenthrombose", anamnese: "42J weiblich, Flug 12h, Schwellung Bein", koerperlich: "Schwellung linkes Bein, Homan-Zeichen+", vitale: "normal", labor: "D-Dimer↑", bildgebung: "Duplex: femoral thrombosiert", q: ["DVT und Ätiologie?", "Antikoagulation?", "Dauer?", "PE-Risiko?"], answers: ["DVT femoral, Immobilität", "UFH oder LMWH", "5 Tage Heparin + 3 Monate total", "15-30% unbehandelt"]},
+            {id: 26, fach: "Endokrinologie", diagnose: "Addison-Krankheit", anamnese: "45J weiblich, Müdigkeit, Hypotension", koerperlich: "Hypotensiv (95/60), Hyperpigmentierung", vitale: "RR 95/60, HF 88", labor: "Cortisol↓↓, ACTH↑↑↑, Na↓", bildgebung: "Synacthen-Test abnormal", q: ["Morbus Addison?", "Ätiologie?", "Glucocorticoid?", "Mineralocorticoid?"], answers: ["Primäre Nebenniereninsuffizienz", "Autoimmun", "Hydrocortison 20-25mg/d", "Fludrocortisone 50-100μg/d"]},
+            {id: 27, fach: "Unfallchirurgie", diagnose: "Kompartmentsyndrom", anamnese: "32J männlich, Crush-Verletzung Unterschenkel", koerperlich: "Schmerz bei passiver Dorsiflexion", vitale: "RR 135/85, HF 105", labor: "Myoglobin↑", bildgebung: "Schwellung massiv", q: ["5-Zeichen-Diagnose?", "Kritischer Druck?", "Fasziotomie?", "Rhabdo?"], answers: ["Pain, Pressure, Pulselessness, Paresthesia", "≥30 mmHg → STAT Fasziotomie", "Ja - 2 Schnitte", "Myoglobin-Urie → ATN"]},
+            {id: 28, fach: "Gastroenterologie", diagnose: "Obere GI-Blutung", anamnese: "58J männlich, Zirrhose CHILD C, Bluterbrechen massiv", koerperlich: "Blass, Schock, Asites", vitale: "RR 92/55, HF 125, SpO2 92%", labor: "Hb 8.5, INR 2.8, Thrombozyten 85.000", bildgebung: "Ösophagusvarizen blutend", q: ["Varizen-Blutung?", "Notfall-Management?", "Endoskopie?", "Rescue?"], answers: ["Ösophagusvarizen aktiv blutend", "2 IVs, Fluid-Resusc vorsichtig", "Gummiband-Ligation", "TIPS"]},
+            {id: 29, fach: "Notfallmedizin", diagnose: "Chronische thromboemboli", anamnese: "52J männlich, Dyspnoe progressiv 6 Monate", koerperlich: "Tachypnoe, JVD↑, Ödeme", vitale: "RR 140/90, SpO2 88%", labor: "BNP↑↑", bildgebung: "Alte + neue Thrombi, RV-Hypertrophie", q: ["CTEPH vs PE?", "Pulmonale HTN?", "Therapie?", "PTE?"], answers: ["CTEPH: alte + neue Thrombi", "RV-Dilatation, progressive PH", "Long-term Antikoagulation", "PTE wenn operable: 90% 5-Jahr"]},
+            {id: 30, fach: "Neurologie", diagnose: "Spannungskopfschmerz vs Migräne", anamnese: "38J weiblich, chronischer KS 3x/Woche", koerperlich: "normale Neuro-Exam", vitale: "normal", labor: "normal", bildgebung: "nicht nötig", q: ["DD KS?", "Diagnose-Tools?", "Akute Therapie?", "Prophylaxe?"], answers: ["Spannungs-KS: bilateral, pressure-like", "Klinisch only", "Paracetamol/Ibuprofen", "Stress-Management"]},
+            {id: 31, fach: "Psychiatrie", diagnose: "Depression mit Suizidgedanken", anamnese: "34J weiblich, 3 Wochen niedergeschlagen", koerperlich: "unauffällig", vitale: "normal", labor: "normal", bildgebung: "nicht nötig", q: ["MDD Diagnose?", "Suizidrisiko?", "SSRI?", "Black-Box?"], answers: ["5+ Symptome x 2 Wochen", "Risiko-Assessment critical", "Sertralin oder Fluoxetin", "SSRIs verschärfen initial"]},
+            {id: 32, fach: "Gastroenterologie", diagnose: "Untere GI-Blutung", anamnese: "48J weiblich, helle Blutung per rectum", koerperlich: "Hämorrhoiden Grade II", vitale: "normal", labor: "Hb stabil", bildgebung: "rektale Exam", q: ["Quelle?", "Konservativ oder Ligation?", "Kolonoskopie?", "Prognose?"], answers: ["Hämorrhoiden blutend", "Conservative oder Gummiband", "Wenn >40 Jahre", "Rezidiv 20%"]},
+            {id: 33, fach: "Onkologie", diagnose: "Magenkarzinom", anamnese: "62J männlich, Epigastrische Schmerz, Gewichtsverlust", koerperlich: "Hepatomegalie", vitale: "normal", labor: "Hb 11.0, CEA↑, CA 19-9↑", bildgebung: "ÖGD: Magenkarzinom", q: ["Histologie?", "H. pylori?", "Staging?", "Neoadjuvante Chemo?"], answers: ["Intestinal-Typ", "H. pylori-Status?", "TNM-Staging", "5-FU + Cisplatin"]},
+            {id: 34, fach: "Onkologie", diagnose: "Lungenkarzinom", anamnese: "68J männlich, Raucher, Husten, Gewichtsverlust", koerperlich: "unauffällig", vitale: "normal", labor: "normal", bildgebung: "CT: zentrale Läsion 3cm", q: ["NSCLC vs SCLC?", "Histologie?", "Staging?", "Therapie?"], answers: ["NSCLC wahrscheinlich", "Histologie-Bestimmung nötig", "TNM mit Metastasen-Screening", "Stage IV: Chemo oder TKI"]},
+            {id: 35, fach: "Hämatologie", diagnose: "Eisenmangelanämie", anamnese: "52J weiblich, Müdigkeit, Menorrhagie", koerperlich: "Blass, Cheilitis", vitale: "normal", labor: "Hb 8.5, MCV 62, Ferritin 12", bildgebung: "Eisenstudien abnormal", q: ["Diagnose?", "Ätiologie?", "Eisenersatz?", "Quellen?"], answers: ["Mikrozytär + hypochrom", "Menorrhagie", "Ferrosulfat 325mg", "Koloskopie >45 Jahre"]},
+            {id: 36, fach: "Infektiologie", diagnose: "Lungenabszess", anamnese: "62J männlich, Aspiration-History, Fieber, purulenter Husten", koerperlich: "Rasselgeräusche, Stimmfremitus↑", vitale: "RR 140/90, T 39.2°C", labor: "Leukozyten 16.500, CRP↑", bildgebung: "Kavernöse Läsion + Luft-Flüssigkeits-Niveau", q: ["Abszess Diagnose?", "Ätiologie?", "Anaerobe AB?", "Drainage?"], answers: ["Kavernöse Läsion = klassisch", "Aspiration (anaerob)", "Clindamycin 600mg IV", "Nur wenn >5cm"]},
+            {id: 37, fach: "Urologie", diagnose: "Harnsäure-Nephrolithiasis", anamnese: "48J männlich, Gicht bekannt, Flankenschmerz", koerperlich: "CVA-Schmerz", vitale: "normal", labor: "Harnsäure 9.2, Urin-pH 5.8", bildgebung: "Radioluzenter Stein im CT", q: ["Radioluzenter Stein?", "pKa Bedeutung?", "Urin-Alkalisierung?", "Auflösung?"], answers: ["Harnsäure-Stein", "pKa 5.75 → pH <6.5", "Zitrat, pH Target >6.5", "JA - Harnsäure auflösbar"]},
+            {id: 38, fach: "Gastroenterologie", diagnose: "Choledocholithiasis mit Pankreatitis", anamnese: "58J weiblich, Gallensteine bekannt, Epigastrica + Ikterus", koerperlich: "Gelbfärbung", vitale: "normal", labor: "Bilirubin↑↑, Lipase↑↑↑", bildgebung: "ERCP: Stein DHC", q: ["Choledocholithiasis?", "Pankreatitis-Mechanismus?", "ERCP + EST?", "Timing?"], answers: ["Stein im DHC", "Obstruction → retrograder Fluss", "ERCP + EST + Extraktion", "<48h wenn Cholangitis"]},
+            {id: 39, fach: "Kardiologie", diagnose: "Akute Myokarditis", anamnese: "32J männlich, 1 Woche Virale Prodrom", koerperlich: "Fieber, Reibungston", vitale: "RR 138/88, HF 110, T 38.2°C", labor: "Troponin↑↑, CRP↑", bildgebung: "Diffuse ST-Hebung, Echo Wandstörung", q: ["Myokarditis Diagnose?", "MRT Kardiak?", "Therapie?", "ECMO?"], answers: ["Virale Prodrom + Troponin↑↑", "MRT mit LGE Gold-Standard", "Beta-Blocker, ACE-I", "Fulminant: ECMO"]},
+            {id: 40, fach: "Kardiologie", diagnose: "Akute Perikarditis", anamnese: "28J weiblich, 2 Tage pleuraler Brustschmerz", koerperlich: "Pericardial rub auskultierbar!", vitale: "RR 125/80, T 38.1°C", labor: "CRP↑", bildgebung: "EKG: diffuse ST↑ + PR↓", q: ["Viral Perikarditis?", "NSAR first-line?", "Kolchizin?", "Tamponade?"], answers: ["Viral (Enterovirus wahrscheinlich)", "Indomethacin 50mg 3x/d", "Kolchizin 0.5-1mg", "Tamponade: Beck-Triade"]},
+            {id: 41, fach: "Unfallchirurgie", diagnose: "Fettembolie-Syndrom", anamnese: "24J männlich, Tibia-Fraktur, 24h später Lungenversagen", koerperlich: "Tachypnoe, Rasselgeräusche, Petechiae klassisch!", vitale: "RR 110/70, HF 125, SpO2 85%!", labor: "Thrombozyten↓, Fibrinogen↓", bildgebung: "Diffuse Infiltrate", q: ["FES Triade?", "Pathophysiologie?", "Therapie?", "Prevention?"], answers: ["Lunge + Neuro + Petechiae", "Fett aus Knochenmark", "O2 aggressiv", "Early Fracture-Fixation"]},
+            {id: 42, fach: "Notfallmedizin", diagnose: "Perikardtamponade", anamnese: "42J männlich, Messer-Stich anterior, plötzlich Schock", koerperlich: "Beck-Triade: Hypotension + JVD + stille Herztöne!", vitale: "RR 78/50, HF 135, SpO2 90%", labor: "Hb↓↓", bildgebung: "Echo: RV-Kollaps Diastole", q: ["Beck-Triade?", "Echo RV?", "Notfall-Perikardiocentese?", "Drainage?"], answers: ["Hypotension + JVD + stille Töne", "RV-Kollaps pathognomisch", "Subxiphoid oder apical", "Chirurgische Drainage wenn Versagen"]},
+            {id: 43, fach: "Notfallmedizin", diagnose: "Hypertensive Notfall", anamnese: "58J männlich, unkontrollierte HTN, plötzlich KS + Sehstörung + Krampf", koerperlich: "Papillenödem bei Funduskopie!", vitale: "RR 220/140, HF 110", labor: "Kreatinin 2.5", bildgebung: "Funduskopie: Papillenödem", q: ["Urgency vs Notfall?", "Pathophysiologie?", "IV-Therapie?", "BP-Rate?"], answers: ["Notfall: Organdamage (Papillenödem)", "Autoregulation shifted", "Nitroprussid/Nicardipine IV", "Max 10-20% Reduktion"]},
+            {id: 44, fach: "Notfallmedizin", diagnose: "Rhabdomyolyse", anamnese: "35J männlich, Crush-Verletzung, 6h später dunkle Urine", koerperlich: "Massive Schwellung, Schmerz", vitale: "normal", labor: "CK 8500↑↑↑, Myoglobin↑↑↑, K 5.8", bildgebung: "Keine spezifisch", q: ["Schweregrad?", "Myoglobin-Pathophysio?", "IV-Hydration?", "Hyperkalämie?"], answers: ["Moderate bis schwer (CK >8500)", "Myoglobin → Tubulnekrose", "1-1.5L erste Stunde", "EKG-Monitor, Calcium-Gluconate"]},
+            {id: 45, fach: "Hämatologie", diagnose: "Autoimmunhämolytische Anämie", anamnese: "52J weiblich, plötzlich Müdigkeit + Ikterus", koerperlich: "Ikterus, Splenomegalie", vitale: "normal", labor: "Hb 7.8, Retikulozyten↑↑, Bilirubin↑ (indirekt)", bildgebung: "Coombs-Test POSITIV!", q: ["AIHA Coombs+?", "Primär vs sekundär?", "Prednison?", "Splenektomie?"], answers: ["IgG + Komplement auf RBC", "Primär (Idiopathisch 50%)", "1-1.5mg/kg/d", "Steroid-abhängig"]},
+            {id: 46, fach: "Chirurgie", diagnose: "Perforierende Appendizitis", anamnese: "32J weiblich, klassische Migration: periumbilical → RUQ", koerperlich: "Rovsing+, McBurney++, Guarding/Rebound", vitale: "RR 135/85, T 38.9°C", labor: "Leukozyten 15.800, CRP↑↑", bildgebung: "CT: Appendix verdickt + freie Luft!", q: ["Appendizitis Grad?", "Mortalität?", "Notfall-OP?", "Abszess?"], answers: ["Perforiert: freie Luft", "3-5% Mortalität", "Appendektomie laparoskopisch", "Abszess-Bildung 30%"]},
+            {id: 47, fach: "Notfallmedizin", diagnose: "Symptomatic Hyponatriämie", anamnese: "68J weiblich, Verwirrtheit + Ataxie über Tage", koerperlich: "Verwirrtheit, Ataxie", vitale: "normal", labor: "Na 118, Osmolalität 245, Urin-Osmolalität 480", bildgebung: "Klinik-Basis", q: ["Schweregrad?", "SIADH Diagnose?", "Hypertone Saline?", "Korrektur-Rate?"], answers: ["Na 118: SCHWER, symptomatic", "Hypoosmolar + inappropriately HIGH Urin-Osmolalität", "3% NaCl VORSICHTIG", "4-6 mEq/L erste 24h"]},
+            {id: 48, fach: "Chirurgie", diagnose: "Postoperativer Ileus", anamnese: "62J männlich, 3 Tage post-Laparotomie, keine Flatus/Stuhl", koerperlich: "Distension, leise Darmgeräusche", vitale: "normal", labor: "Elektrolyte normal", bildgebung: "Röntgen: Überblähung", q: ["Paralytic vs mechanisch?", "Pathophysiologie?", "NG-tube + Mobilisation?", "Prokinetik?"], answers: ["Postop Ileus: Paralytic typisch", "Neurale Hemmung (NO)", "NG Dekompression + Früh-Mobilisation = GOLD", "Metoclopramid, begrenzte Evidenz"]},
+            {id: 49, fach: "Gastroenterologie", diagnose: "Stressulkus nach Trauma", anamnese: "45J männlich, Polytrauma, 3 Tage ICU, schwarzes Erbrochenes", koerperlich: "kritisch, sediert", vitale: "normal", labor: "Hb 9.5", bildgebung: "ÖGD: multiple shallow Ulzerationen", q: ["Stressulkus nach Trauma?", "Pathophysiologie?", "PPI-Prophylaxe?", "Endoskopie?"], answers: ["Nach kritischem Event", "Hypoperfusion + Cortisol", "Omeprazol 40mg/d in ICU", "meist self-limited"]}
+        ]
+
+        // Add remaining 45 cases (5-49)
+        const remainingCases = [
+            {id: 5, fach: "Chirurgie", diagnose: "Perforiertes Magenulkus", q: ["Erkenne die Diagnose", "Diskutiere Notwendigkeit der OP", "Beschreibe chirurgische Technik", "Welche Komplikationen?"], answers: ["Perforiertes Magengeschwür mit Pneumoperitoneum. Patognomisch: freie Luft subdiaphragmal.", "Sofort-OP (Laparotomie). Gefahr: Peritonitis, Sepsis, kardiogener Schock.", "Primäre Reparatur (Vierschichtnahttechnik) + Omentoplastie.", "Sepsis, Dehiszenz, Pankreastfistel, Ileus, Sterblichkeit ~10%."] },
+            {id: 6, fach: "Chirurgie", diagnose: "Primär spontaner Pneumothorax", q: ["Klassifiziere Pneumothorax", "Entscheide Therapie", "Drainage-Details", "Entlassung und Nachfolge"], answers: ["Kleine primär-spontane PSX (<2cm): Kleine Größe + jung = konservativ OK.", "Konservativ: Beobachtung. Größere: Nadel-Aspiration oder Chest-Tube.", "Small bore catheter (16-20F). Komplikationen: Reexpansion-Lungenödem.", "Discharge nach Reexpansion. Follow-up CXR in 24-48h. Rezidiv-Risiko ~25%."] },
+            {id: 7, fach: "Neurologie", diagnose: "Akuter ischämischer Schlaganfall", q: ["Eignung für Thrombolyse?", "Klassifiziere Ätiologie", "Akut- und Langzeitmanagement", "RR-Management"], answers: ["Ja, 90 min < 4.5h. Keine KI: kein ICB, INR 0.9, Thrombozyten OK.", "Kardiale Embolie (VHF nicht antikoaguliert).", "rtPA 0.9 mg/kg IV. Antikoagulation nach 24h mit DOAC.", "Vorsicht Überkorrektion. Ziel <180 systolisch. Neuroprotection."] },
+            {id: 8, fach: "Notfallmedizin", diagnose: "Septischer Schock", q: ["Definiere Sepsis und septischen Schock", "Infektionsquelle identifizieren", "6-Stunden-Bundle beschreiben", "Vasopressoren und Management"], answers: ["Sepsis + Hypotension (92/56) + Organdysfunktion.", "Urosepsis (rezidivierende HWI, Hydronephrose bilateral).", "Blutkultur, AB, Bolus 30mL/kg, Vasopressor, Urology-Konsult.", "Ceftriaxon 2g 2x/d + Gentamicin. Notfall-Drainage. MAP ≥65."] },
+            {id: 9, fach: "Gastroenterologie", diagnose: "Akute Cholezystitis", q: ["Bestätige Diagnose", "Konservativ vs interventionell", "Operative Techniken", "Komplikationen"], answers: ["Murphy-Zeichen positiv. Steine + Wandverdickung = akute Cholezystitis.", "Elektiv Cholezystektomie in 2 Wochen. Initial: AB, NPO, Hydration.", "Laparoskopisch bevorzugt. Konversion bei Zirrhose/Anatomie-Unsicherheit.", "Gallenblasen-Perforation, Choledochus-Stein, Pankreatitis, Cholangitis."] },
+            {id: 10, fach: "Infektiologie", diagnose: "Bakterielle Pneumonie", q: ["Klassifiziere Pneumonie", "Erreger und Antibiotika", "Stationäre Aufnahme-Kriterien", "Komplikationen"], answers: ["CAP. CURB-65: 0 Punkte = Low-Risk. SpO2 93% = moderates Risiko.", "E. coli/Streptococcus: Amoxicillin oder Cephalosporin.", "PSI III-V, SpO2 <94%, Komorbiditäten.", "Pleuraerguss, Lungenabszess, Sepsis. CXR nach 4-6 Wochen."] },
+            {id: 11, fach: "Urologie", diagnose: "Urolithiasis mit Kolik", q: ["Diagnostiziere Urolithiasis", "Größe und Prognose", "Schmerzbehandlung", "Rezidiv-Prävention"], answers: ["Harnsäure-Stein: Radioluzent im Röntgen, in CT sichtbar.", "6mm = 85-95% spontane Passage. Keine Hydronephrose = gute Prognose.", "NSAR: Diclofenac 75mg oder Ibuprofen 600mg. 85% in 2-4 Wochen.", "Hydration, Allopurinol 300mg/d, Urin-Alkalisierung, purinarme Diät."] },
+            {id: 12, fach: "Neurologie", diagnose: "Subarachnoidalblutung", q: ["Diagnose und Hunt-Hess", "Diagnostische Schritte", "Vasospasmus und Prävention", "Operative vs endovaskuläre Therapie"], answers: ["SAB, Aneurysma-Ruptur. Hunt-Hess III: ~40% Mortalität.", "CT-Angiografie oder DSA. LP wenn CT negativ.", "Nimodipina 60mg q4h. Früh-Reparatur (chirurgisch/endovaskulär).", "Early Intervention. Aggressive Vasospasmus-Management."] },
+            {id: 13, fach: "Unfallchirurgie", diagnose: "Unterschenkeltraumata", q: ["Klassifiziere Fraktur", "Erste Hilfe", "Operative vs konservativ", "Langzeitkomplikationen"], answers: ["Tibia+Fibula, Gustilo II. Osteomyelitis-Risiko hoch.", "Tetanus, AB, Reposition, Debridement <6h.", "ORIF: Intramedullär Nagel bevorzugt.", "Osteomyelitis, delayed union, 6-12 Monate Rückkehr."] },
+            {id: 14, fach: "Gastroenterologie", diagnose: "Peptisches Ulkus", q: ["Ätiologie NSAR vs H. pylori", "Therapie mit Dosierungen", "Kontroll-EGD notwendig?", "Rezidiv-Prävention"], answers: ["NSAR + H. pylori als Ko-Faktoren. 90% haben einen.", "PPI 40mg/d + H. pylori-Eradikation (Triple x 10-14 Tage).", "Nur wenn >1cm oder Malignität verdächtig.", "Continuous PPI 20mg/d. NSAR absetzen."] },
+            {id: 15, fach: "Angiologie", diagnose: "Periphere arterielle Verschlusskrankheit", q: ["Klassifiziere nach Fontaine", "Konservativ vs interventionell", "Medikamentöse Therapie", "Monitoring"], answers: ["pAVK II: Claudicatio >200m, ABI 0.65 = kritisch.", "Gehtraining, Smoking-Cessation, Statine, Aspirin.", "Wenn Versagen: PTA ± Stent.", "ABI jährlich. 25% Critical-Ischemia in 5 Jahren."] },
+            {id: 16, fach: "Gastroenterologie", diagnose: "Akute Pankreatitis", q: ["Diagnose und Ätiologie", "Schweregrad-Score", "Therapie", "Komplikationen"], answers: ["Alkoholisch. Lipase ↑↑↑.", "Ransons: mild (2 Punkte).", "NPO → progressive Diät, IV-Hydration, Opioide OK.", "Pseudocyst, Nekrose, Abszess, Organversagen."] },
+            {id: 17, fach: "Urologie", diagnose: "Akute Zystitis", q: ["Diagnose und Differenzial", "Erreger", "Antibiotika-Wahl", "Dauer und Rezidiv-Management"], answers: ["Dysturie + Pollakisurie + Leukozyten/Nitrit. NICHT Pyelonephritis.", "E. coli 80%, Staph. saprophyticus 15%.", "Fosfomycin 3g single oder Nitrofurantoin 5 Tage.", "3 Tage. Rezidiv >2x/Jahr: Langzeit-Prävention."] },
+            {id: 18, fach: "Notfallmedizin", diagnose: "Pulmonale Embolie", q: ["Diagnose und Schweregrad", "Pathophysiologie", "Antikoagulation", "Prognose"], answers: ["Massive PE. D-Dimer ↑↑, Troponin ↑, RV-Strain.", "RV-Dysfunktion. Mortalität unbehandelt 30%.", "UFH oder LMWH. Thrombolyse bei Massive+Hypotension.", "IVC-Filter nur bei KI. Mindestens 3 Monate."] },
+            {id: 19, fach: "Chirurgie", diagnose: "Aortendissektion Typ A", q: ["Diagnose und Ursache", "Notfall-Management", "Ziel-Blutdruck", "Komplikationen"], answers: ["Typ A: Beteiligung Aorta ascendens. Malignant HTN.", "Notfall-OP. BP-Reduktion auf 100-120 systolisch.", "Nitroprussid + Beta-Blocker. Chirurgische Reparation.", "Koronare Dissektion, Aorten-Insuffizienz, Spinale Ischämie."] },
+            {id: 20, fach: "Endokrinologie", diagnose: "Diabetische Ketoazidose", q: ["Diagnose DKA", "Pathophysiologie", "Akute Therapie", "Komplikationen"], answers: ["Glucose 580 + pH 7.25 + Ketone ++ + Anion Gap 16.", "Absoluter Insulinmangel → Lipolyse → Ketone ↑↑.", "Flüssigkeiten ZUERST. Insulin 0.1 IU/kg/h nach K+ >3.5.", "Zerebrale Ödema, Hypoglykämie, Hypokaliämie (1-5% Mortalität)."] },
+            {id: 21, fach: "Pulmonologie", diagnose: "COPD-Exazerbation", q: ["Schweregrad und Diagnose", "Sauerstoff-Therapie", "Bronchodilatatoren und Steroide", "Langzeit-Management"], answers: ["GOLD IV, schwer: SpO2 85%, pCO2 58 (Typ II).", "FiO2 vorsichtig: Target SpO2 88-92%.", "Albuterol + Ipratropium. Prednison 40mg QID x 5 Tage.", "BiPAP zuerst. Smoking-Cessation. Heimat-O2."] },
+            {id: 22, fach: "Endokrinologie", diagnose: "Primäre Hypothyreose", q: ["Diagnose und Ätiologie", "Levothyroxin-Dosierung", "Wechselwirkungen", "Überbehandlung-Risiken"], answers: ["TSH ↑↑, T4 ↓. Hashimoto (TPO+) = Autoimmun.", "Levothyroxin 25-50 μg/d. Adjust q 6-8 weeks. TSH 0.5-2.5.", "Eisen/Kalzium: 2h Abstand. Generika-Wechsel vorsichtig.", "Vorhofflimmern, Osteoporose, Tachykardie."] },
+            {id: 23, fach: "Pulmonologie", diagnose: "Pleuraerguss", q: ["Klassifiziere exsudativ vs transudativ", "Differenzialdiagnose", "Pleuraflüssigkeits-Analyse", "Therapie"], answers: ["Lights-Kriterien: Protein, LDH. HI wahrscheinlich (BNP ↑).", "Transudativ: HI, Zirrhose. Exsudativ: Pneumonie, Malignanz.", "Protein, LDH, Glucose, Zellzahl, Kultur, pH, Cytologie.", "Diuretika. Thoracocentese wenn persistierend. Pleurodesis."] },
+            {id: 24, fach: "Endokrinologie", diagnose: "Metabolisches Syndrom", q: ["Diagnose Metabolisches Syndrom", "Pathophysiologie", "Therapie", "Monitoring"], answers: ["Zentrale Adipositas + HTN + abnormale Glukose.", "Insulinresistenz zentral → Dyslipidämie → Atherosclerose.", "Lebensstil (10-15% Gewicht), Metformin, Statine.", "Jährlich Metabolic Panel. 25% zu T2DM in 5 Jahren."] },
+            {id: 25, fach: "Angiologie", diagnose: "Tiefe Venenthrombose", q: ["Diagnose und Ätiologie", "Antikoagulation", "Dauer der Therapie", "Rezidiv-Risiko"], answers: ["DVT femoral/popliteal. Immobilität (Flug).", "UFH oder LMWH sofort. aPTT/Anti-Xa target.", "5 Tage Heparin + Warfarin (INR 2-3). 3 Monate minimum.", "PE 15-30% unbehandelt, <2% mit AB."] },
+            {id: 26, fach: "Endokrinologie", diagnose: "Addison-Krankheit", q: ["Diagnose primäre Nebenniereninsuffizienz", "Synacthen-Test", "Glucocorticoid/Mineralcorticoid Replacement", "Adrenal Crisis Management"], answers: ["Cortisol ↓↓ + ACTH ↑↑. Autoimmune Thyreoiditis (TPO+).", "ACTH 1-24 μg: Cortisol <500 nmol/L = Insufficiency.", "Hydrocortison 20-25mg/d. Fludrocortisone 50-100 μg/d.", "IV-Hydrocortison 50-100mg q6-8h + Flüssigkeits-Resuscitation."] },
+            {id: 27, fach: "Unfallchirurgie", diagnose: "Kompartmentsyndrom", q: ["Diagnose 5-Zeichen", "Druckmessung", "Fasziotomie", "Rhabdomyolyse-Komplikationen"], answers: ["Pain, Pressure, Pulselessness, Paresthesia, Pallor/Paralysis.", "Kritischer Druck ≥30 mmHg STAT-Indikation.", "2 Schnitte anterior + lateral. Muskeln inspizieren.", "Myoglobin-Urie → ATN. Aggressive Hydration."] },
+            {id: 28, fach: "Gastroenterologie", diagnose: "Obere GI-Blutung", q: ["Diagnose Ösophagusvarizen", "Notfall-Management", "Endoskopische Therapie", "Rettung bei Versagen"], answers: ["Spritzing aktiv. Glasgow Blatchford: High Risk.", "2 großlumige IVs. Fluid-Resusc. FFP/Plättchen.", "Gummiband-Ligation. Octreotid 50 μg.", "Balloon-Tamponade oder TIPS."] },
+            {id: 29, fach: "Notfallmedizin", diagnose: "Chronische thromboemboli", q: ["CTEPH vs akute PE", "Pathophysiologie", "Medikamentöse Therapie", "Prognose mit/ohne PTE"], answers: ["Alte Thrombi + Rekanalisierung. Progressive PH.", "Abnormale Fibrinolyse → organisiierte Narben.", "Long-term AB (lebenslang). Pulmonale Vasodilatatoren.", "Mit PTE: 90% 5-Jahr. Ohne: progressive Dyspnoe."] },
+            {id: 30, fach: "Neurologie", diagnose: "Spannungskopfschmerz vs Migräne", q: ["Differenzialdiagnose", "Diagnose (Labor/Imaging?)", "Akute Therapie", "Prophylaxe"], answers: ["Spannungs-KS: bilateral, druck-ähnlich. Migräne: pulsierend.", "Klinisch nur. Normale Exam = beruhigend.", "Paracetamol/Ibuprofen. Migräne: Triptane.", "Spannungs-KS: Stress-Management. Migräne: Propranolol/Amitriptylin."] },
+            {id: 31, fach: "Psychiatrie", diagnose: "Depression mit Suizidgedanken", q: ["MDD-Diagnose Kriterien", "Suizidrisiko-Assessment", "Therapie mit SSRI", "Black-Box-Warning"], answers: ["5+ Symptome x 2 Wochen: Niedergeschlagenheit, Hoffnungslosigkeit, Schlaf ↓, Appetit ↓, Suizidgedanken.", "Plan? Mittel? Intention? Frühere Versuche? Psychiatrie-Konsult.", "SSRI first-line: Sertralin 50-200mg. CBT/IPT parallel.", "SSRIs verschlimmern initial Suizid-Gedanken (Woche 1-2)."] },
+            {id: 32, fach: "Gastroenterologie", diagnose: "Untere GI-Blutung", q: ["Quelle identifizieren", "Lokalisieriung", "Therapie Hämorrhoiden", "Prognose"], answers: ["Helle Blutung = Kolon. Hämorrhoiden blutend.", "Rektale Untersuchung. Kolonoskopie wenn >40 Jahre.", "Conservative: Fasern + Sitzbad. Gummiband-Ligation.", "Rezidiv 20% (Ligation: 5%). Kolonoskopie follow-up."] },
+            {id: 33, fach: "Onkologie", diagnose: "Magenkarzinom", q: ["Histologie und H. pylori", "Staging", "Therapie resektabel", "Prognose"], answers: ["Intestinal vs diffuse. H. pylori: 3-5% malignancia-Risiko.", "TNM. CT/EGD/Tumor-Marker. Laparoskopie vor OP.", "Neoadjuvante Chemo → Gastrektomie + D2 Lymphadenektomie → Adjuvante Chemo.", "Stadium I: 80%. Stadium IV: <5% 5-Jahr."] },
+            {id: 34, fach: "Onkologie", diagnose: "Lungenkarzinom", q: ["NSCLC Histologie", "Staging und Metastasen", "NSCLC Therapie", "Rauchen-Cessation"], answers: ["Adenokarzinom/Plattenepithel/Großzellig (80% NSCLC).", "TNM. Brain-MRI, Knochen-Scan, PET-CT.", "Stadium I-II: Lobektomie. Stadium IV: Chemo ± TKI.", "Prognose: Stadium I 70%, Stadium IV <5%."] },
+            {id: 35, fach: "Hämatologie", diagnose: "Eisenmangelanämie", q: ["Mikrozytär und Ätiologie", "Eisenstudien", "Eisenersatz Therapie", "Quellen identifizieren"], answers: ["MCV 62, MCH 19. Chronischer Blutverlust (Menorrhagie).", "Eisen ↓, Ferritin ↓↓, TIBC ↑.", "Ferrosulfat 325mg q8h. GI-Nebenwirkungen häufig.", "GI-Quelle: Koloskopie wenn ≥45 Jahre."] },
+            {id: 36, fach: "Infektiologie", diagnose: "Lungenabszess", q: ["Kavernöse Läsion Ätiologie", "Diagnostik", "Therapie Antibiotika", "Komplikationen"], answers: ["Aspiration (Anaerobier) oder Pneumonie mit Nekrose.", "Kultur Sputum, Blutkultur, CT follow-up.", "Clindamycin 600mg IV q8h. Drainage wenn >5cm.", "Pleura-Empyem, Bronchopleural-Fistel, Sepsis."] },
+            {id: 37, fach: "Urologie", diagnose: "Harnsäure-Nephrolithiasis", q: ["Radioluzenter Stein", "pKa und Urin-Alkalisierung", "Akute und Langfrist-Therapie", "Auflösung möglich?"], answers: ["Radioluzent im Röntgen, CT sichtbar. pKa 5.75 → pH <6.5.", "Urin-Alkalisierung (pH >6.5) + Hydration.", "NSAR akut. Allopurinol/Febuxostat + Zitrat langfristig.", "Harnsäuresteine auflösbar mit pH >6.5. Rezidiv 50%."] },
+            {id: 38, fach: "Gastroenterologie", diagnose: "Choledocholithiasis mit Pankreatitis", q: ["Choledocholithiasis", "Stein-Obstruction Pathophysio", "ERCP + EST", "Post-ERCP Komplikationen"], answers: ["Stein im DHC. Akute Pankreatitis (Amylase/Lipase ↑↑).", "DHC-Obstruction → erhöhter Druck → retrograder Fluss.", "ERCP + EST + Steinextraktion. Timing: <48h Cholangitis.", "Pankreatitis 3-7%, Perforation, Blutung. Cholezystektomie später."] },
+            {id: 39, fach: "Kardiologie", diagnose: "Akute Myokarditis", q: ["Virale Myokarditis", "Diagnostik MRT", "Therapie und ECMO", "Langfristig-Komplikationen"], answers: ["Virale Prodrom + Troponin ↑↑ + diffuse ST-Hebung.", "Troponin↑ + EKG + Echo. MRT mit LGE = Gold-Standard.", "Supportiv: Beta-Blocker, ACE-I. Immunosuppressiva schwere Fälle.", "Genesung 70%, Fulminante 50% (ECMO). 5-10% dilatatierte Kardiomyopathie."] },
+            {id: 40, fach: "Kardiologie", diagnose: "Akute Perikarditis", q: ["Virale Perikarditis", "EKG und Echokardiographie", "NSAR und Kolchizin", "Tamponade"], answers: ["Viral (Enterovirus) nach URI + Reibungston.", "Diffuse ST-Hebung + PR-Senkung. Erguss klein-moderat.", "NSAR first-line. Kolchizin 0.5-1mg reduziert Rezidiv.", "Tamponade: Beck-Triade → Echokardiographie + Perikardiocentese."] },
+            {id: 41, fach: "Unfallchirurgie", diagnose: "Fettembolie-Syndrom", q: ["FES Triade", "Pathophysiologie", "Therapie", "Mortalität und Prevention"], answers: ["Lunge, Neuro, Petechiae. Lange-Knochen-Fraktur-Auslöser.", "Fett-Tröpfchen → Lunge-Kapillaren → Vasokonstriktion.", "Supportiv: O2, Beatmung. Early Fracture-Fixation.", "Mortalität 5-15%. Prevention: Early Stabilisierung."] },
+            {id: 42, fach: "Notfallmedizin", diagnose: "Perikardtamponade", q: ["Beck-Triade", "Echo RV-Kollaps", "Notfall-Perikardiocentese", "Chirurgische Dräinage"], answers: ["Hypotension + JVD + stille Herztöne. Traumatisch.", "RV-Kollaps in Diastole = Tamponade-Zeichen.", "Subxiphoid oder apical. Echo-geführt. 20-30mL oft ausreichend.", "Chirurgische OP wenn Versagen oder wiederkehrend."] },
+            {id: 43, fach: "Notfallmedizin", diagnose: "Hypertensive Urgency/Notfall", q: ["Klassifizierung", "Pathophysiologie", "Oral vs IV Therapie", "Monitoring"], answers: ["Urgency: hohe RR ohne Organ-Schaden. Notfall: mit Schaden.", "Autoregulation shifted → Kapillar-Damage (Retina, ZNS, Niere).", "Urgency: oral (Nifedipin). Notfall: IV (Nitroprussid, Nicardipine).", "Max 10-20% RR Reduktion erste Stunde. Organ-Screening."] },
+            {id: 44, fach: "Notfallmedizin", diagnose: "Rhabdomyolyse", q: ["CK Schweregrad", "Myoglobin-Pathophysio", "IV-Hydration Ziele", "Komplikationen"], answers: ["CK 8500: mild <5000, moderat 5-15k, severe >15k.", "Myoglobin-Filtrierung → tubuläre Präzipitation → ATN.", "Bolus 1-1.5L erste Stunde. Ziel >200 mL/h Urin.", "Hyperkalämie, ATN, Kompartmentsyndrom. 90% renal-recovery."] },
+            {id: 45, fach: "Hämatologie", diagnose: "Autoimmunhämolytische Anämie", q: ["Direkter Coombs Mechanismus", "Primär vs Sekundär", "Prednison-Dosierung", "Splenektomie Indikation"], answers: ["IgG + Komplement auf RBC → Makrophagen-Bindung → Lyse.", "Primär: Idiopathisch 50%. Sekundär: Lymphom, Autoimmun.", "Prednison 1-1.5 mg/kg/d (40-60mg). Taper nach Hb-Anstieg.", "Steroiden-abhängig: 40-50% Ansprechen."] },
+            {id: 46, fach: "Chirurgie", diagnose: "Perforierende Appendizitis", q: ["Migration-Schmerz", "Hinchey Klassifikation", "Notfall-Appendektomie", "Interval-Appendektomie"], answers: ["Periumbilical → RUQ über 24h. Rovsing-Zeichen positiv.", "Perforiert = Mortalität 3-5%. Abszess 30%.", "Notfall-OP laparoskopisch. IV-AB (Cephalosporin 3. Gen).", "Wenn stabil: Initial AB + Drainage, dann OP nach 6-8 Wochen."] },
+            {id: 47, fach: "Notfallmedizin", diagnose: "Symptomatic Hyponatriämie", q: ["Schwere Hyponatriämie", "SIADH Diagnose", "Hypertone Saline vorsichtig", "Korrektur-Rate"], answers: ["Na 118: Symptomatic (Verwirrtheit, Ataxie). ZNS-Ödem.", "Hypoosmolar Plasma + inappropriately high Urin-Osmolalität.", "3% NaCl VORSICHTIG titrated. Nur Symptome if critical.", "4-6 mEq/L erste 24h (max 12 mEq/L, risk Demyelinierung)."] },
+            {id: 48, fach: "Chirurgie", diagnose: "Postoperativer Ileus", q: ["Paralytic vs Mechanisch", "Pathophysiologie NO-Signaling", "NG-tube und Mobilisation", "Prokinetik-Agents"], answers: ["Ileus 5-10% nach Laparotomie. Typ 1: Paralytic (häufig).", "Manipulations-Trauma → neurale Hemmung → Motilität ↓.", "NG-tube Dekompression. Früh-Mobilisation (Gold).", "Metoclopramid, Domperidone (begrenzte Evidenz)."] },
+            {id: 49, fach: "Gastroenterologie", diagnose: "Stressulkus nach Trauma", q: ["Stressulkus Pathophysio", "Hyperäure-Produktion", "PPI-Prophylaxe ICU", "Endoskopie vs OP"], answers: ["Ulzerationen nach Trauma, Sepsis, Burn. Shallow, multiple.", "Splanchnic Hypoperfusion + Cortisol → Säure ↑↑.", "PPI during ICU: Inzidenz Blutung <5% (war 25%).", "Endoskopisch oft self-limited. OP nur massive Blutung."] },
+        ];
+
+        allCases.push(...remainingCases);
+
+        let sessionData = JSON.parse(localStorage.getItem('kpSessionComplete') || '{"completedIds": [], "answers": {}}');
+        let currentMode = 'single';
+        let casesTodo = [];
+        let currentCaseIdx = 0;
+
+        function initMode(mode) {
+            const uncompleted = allCases.filter(c => !sessionData.completedIds.includes(c.id));
+
+            if (mode === 'single') {
+                casesTodo = uncompleted.length > 0 ? [uncompleted[Math.floor(Math.random() * uncompleted.length)]] : [allCases[Math.floor(Math.random() * allCases.length)]];
+            } else if (mode === 'practice') {
+                casesTodo = uncompleted.length > 0 ? [...uncompleted].sort(() => Math.random() - 0.5) : [...allCases].sort(() => Math.random() - 0.5);
+            } else if (mode === 'failed') {
+                const failed = allCases.filter(c => sessionData.answers[c.id]?.some(a => a.rating === 'incorrect'));
+                casesTodo = failed.length > 0 ? failed.sort(() => Math.random() - 0.5) : uncompleted.slice(0, 5);
+            } else if (mode === 'all') {
+                casesTodo = [...allCases].sort(() => Math.random() - 0.5);
+            }
+
+            currentCaseIdx = 0;
+            showCase();
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-selector .btn').forEach(b => {
+                if (b.textContent.includes(mode === 'single' ? 'Einzelfall' : mode === 'practice' ? 'Training' : mode === 'failed' ? 'Fehl' : 'Alle')) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            initMode(mode);
+        }
+
+        function showCase() {
+            if (currentCaseIdx >= casesTodo.length) {
+                showEnd();
+                return;
+            }
+
+            const c = casesTodo[currentCaseIdx];
+
+            let html = `<div class="case-container">
+                <div class="case-header">
+                    <div>
+                        <div class="case-title">${c.diagnose}</div>
+                        <div class="case-meta">${c.fach} • Fall ${c.id}/${allCases.length}</div>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">${currentCaseIdx + 1}/${casesTodo.length}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📋 Anamnese</div>
+                    <div class="section-content">${c.anamnese}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">👨‍⚕️ Körperliche Untersuchung</div>
+                    <div class="section-content">${c.koerperlich}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">❤️ Vitale Parameter</div>
+                    <div class="section-content">${c.vitale}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🧪 Labor</div>
+                    <div class="section-content">${c.labor}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🖼️ Bildgebung</div>
+                    <div class="section-content">${c.bildgebung}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">❓ Fragen</div>
+                    <div style="margin-top: 15px;">`;
+
+            c.q.forEach((question, idx) => {
+                html += `<div class="question-block">
+                    <div class="question-text">F${idx + 1}: ${question}</div>
+                    <textarea id="q${idx}" placeholder="Deine ausführliche Antwort..."></textarea>
+                </div>`;
+            });
+
+            html += `</div></div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="showRating()">Antworten Bewerten</button>
+                        <button class="btn" onclick="skipCase()">Überspringen</button>
+                    </div>
+
+                    <div class="rating-section" id="ratingSection">
+                        <div class="rating-title">Vergleiche deine Antworten mit den Musterlösungen:</div>
+                        <div id="solutionContainer" style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid var(--success);"></div>
+                        <div class="rating-title" style="margin-top: 15px;">Wie bewertest du deine Antworten?</div>
+                        <div class="rating-buttons">
+                            <button class="btn btn-success" onclick="rateCase('correct')">✓ Korrekt</button>
+                            <button class="btn btn-warning" onclick="rateCase('sufficient')">~ Hinreichend</button>
+                            <button class="btn btn-danger" onclick="rateCase('incorrect')">✗ Falsch</button>
+                        </div>
+                    </div>
+
+                    <div id="feedback"></div>
+                </div>
+            `;
+
+            document.getElementById('caseContainer').innerHTML = html;
+            updateStats();
+        }
+
+        function showRating() {
+            const feedbackDiv = document.getElementById('feedback');
+            const ratingDiv = document.getElementById('ratingSection');
+            const solutionDiv = document.getElementById('solutionContainer');
+            feedbackDiv.classList.add('show');
+            ratingDiv.classList.add('show');
+
+            const c = casesTodo[currentCaseIdx];
+            let fb = '';
+            let solutions = '';
+
+            c.q.forEach((q, idx) => {
+                const ans = document.getElementById(`q${idx}`).value;
+                fb += `<div class="feedback-item">
+                    <div class="feedback-q-text">F${idx + 1}: ${q}</div>
+                    <div class="feedback-answer"><strong>Deine Antwort:</strong><br>${ans || '(Keine Eingabe)'}</div>
+                </div>`;
+            });
+
+            if (c.answers && c.answers.length > 0) {
+                solutions = '<div style="margin-bottom: 10px;"><strong style="color: var(--success);">📋 Musterlösungen:</strong></div>';
+                c.answers.forEach((answer, idx) => {
+                    solutions += `<div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+                        <strong style="color: var(--success);">F${idx + 1}:</strong><br>
+                        <span style="color: var(--text-secondary);">${answer}</span>
+                    </div>`;
+                });
+                solutionDiv.innerHTML = solutions;
+            } else {
+                solutionDiv.innerHTML = '<span style="color: var(--text-secondary);">Keine Musterlösungen verfügbar für diesen Fall.</span>';
+            }
+
+            feedbackDiv.innerHTML = `<div class="feedback-header">Vergleich: Deine Antworten vs. Musterlösungen</div>${fb}`;
+            ratingDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function rateCase(rating) {
+            const c = casesTodo[currentCaseIdx];
+            const answers = {};
+            c.q.forEach((q, idx) => {
+                answers[idx] = document.getElementById(`q${idx}`).value;
+            });
+
+            if (!sessionData.answers[c.id]) {
+                sessionData.answers[c.id] = [];
+            }
+
+            sessionData.answers[c.id].push({
+                rating: rating,
+                answers: answers,
+                timestamp: new Date().toISOString()
+            });
+
+            sessionData.completedIds.push(c.id);
+            localStorage.setItem('kpSessionComplete', JSON.stringify(sessionData));
+
+            nextCase();
+        }
+
+        function nextCase() {
+            currentCaseIdx++;
+            showCase();
+        }
+
+        function skipCase() {
+            nextCase();
+        }
+
+        function showEnd() {
+            const completed = sessionData.completedIds.length;
+            const total = allCases.length;
+            const pct = Math.round((completed / total) * 100);
+
+            document.getElementById('caseContainer').innerHTML = `
+                <div class="completion-screen">
+                    <div class="completion-score">${pct}%</div>
+                    <h2>Session Abgeschlossen!</h2>
+                    <p>Du hast ${completed} von ${total} Fällen bearbeitet.</p>
+                    <div class="button-group" style="justify-content: center; margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="location.reload()">Neue Session</button>
+                    </div>
+                </div>
+            `;
+            updateStats();
+        }
+
+        function updateStats() {
+            const completed = sessionData.completedIds.length;
+            const total = allCases.length;
+            const pct = Math.round((completed / total) * 100);
+
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('progressPct').textContent = pct + '%';
+            document.getElementById('progressBar').style.width = pct + '%';
+        }
+
+        function exportProgress() {
+            const dataStr = JSON.stringify(sessionData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `kp-progress-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            alert('✓ Fortschritt exportiert!');
+        }
+
+        function importProgress() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        sessionData = imported;
+                        localStorage.setItem('kpSessionComplete', JSON.stringify(sessionData));
+                        updateStats();
+                        alert('✓ Fortschritt importiert!');
+                    } catch (err) {
+                        alert('✗ Fehler beim Importieren: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function resetProgress() {
+            if (confirm('Bist du sicher? Dies löscht ALLE Fortschritte.')) {
+                sessionData = { completedIds: [], answers: {} };
+                localStorage.setItem('kpSessionComplete', JSON.stringify(sessionData));
+                updateStats();
+                alert('✓ Fortschritt zurückgesetzt!');
+            }
+        }
+
+        initMode('single');
+    </script>
+</body>
+</html>
