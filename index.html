@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KP Simulator - Prüfungskommission</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 { font-size: 28px; margin-bottom: 5px; color: var(--primary); }
+        .header p { font-size: 13px; color: var(--text-secondary); }
+
+        .header-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 6px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-value { font-size: 20px; font-weight: bold; color: var(--primary); display: block; }
+        .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+        .progress-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { background: var(--border); border-color: var(--primary); }
+        .btn.active { background: var(--primary); border-color: var(--primary); }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-success { background: var(--success); border-color: var(--success); }
+        .btn-warning { background: var(--warning); border-color: var(--warning); color: #000; }
+        .btn-danger { background: var(--danger); border-color: var(--danger); }
+
+        .export-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .export-section h3 { color: var(--primary); margin-bottom: 15px; }
+        .export-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .case-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .case-column { display: flex; flex-direction: column; gap: 12px; }
+
+        .case-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .case-title { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
+        .case-meta { font-size: 12px; color: var(--text-secondary); }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .section-title { font-weight: bold; color: var(--primary); margin-bottom: 8px; font-size: 13px; }
+        .section-content { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+
+        .questions-column { display: flex; flex-direction: column; gap: 12px; }
+
+        .questions-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            border-left: 4px solid var(--success);
+        }
+
+        .questions-section h3 { color: var(--success); margin-bottom: 15px; font-size: 16px; }
+
+        .question-block { margin-bottom: 18px; }
+        .question-text { font-weight: bold; color: var(--primary); margin-bottom: 6px; font-size: 13px; }
+
+        textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+
+        .button-group { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .button-group .btn { flex: 1; min-width: 100px; font-size: 13px; }
+
+        .rating-section { display: none; margin-top: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .rating-section.show { display: block; }
+        .rating-title { font-weight: bold; color: var(--success); margin-bottom: 12px; font-size: 14px; }
+        .rating-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .rating-buttons .btn { flex: 1; min-width: 90px; }
+
+        #feedback { display: none; grid-column: 1 / -1; margin-top: 20px; }
+        #feedback.show { display: block; }
+
+        .feedback-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        .feedback-item { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .feedback-q-text { color: var(--primary); font-weight: bold; margin-bottom: 8px; }
+        .solution-answer { color: var(--text-secondary); font-size: 13px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 4px; border-left: 3px solid var(--success); margin-top: 8px; }
+
+        @media (max-width: 1100px) {
+            .case-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🏥 KP Simulator</h1>
+                <p>Prüfungskommission - Medical Exam Practice</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="completedCount">0</span>
+                    <span class="stat-label">Erledigt</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="totalCount">20</span>
+                    <span class="stat-label">Gesamt</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="progressPct">0%</span>
+                    <span class="stat-label">Fortschritt</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div style="font-size: 12px; color: var(--text-secondary);">Gesamtfortschritt</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>📊 Fortschritt verwalten</h3>
+            <div class="export-buttons">
+                <button class="btn btn-primary" onclick="exportProgress()">📥 Exportieren</button>
+                <button class="btn btn-primary" onclick="importProgress()">📤 Importieren</button>
+                <button class="btn btn-warning" onclick="resetProgress()">🔄 Zurücksetzen</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 12px;">Modus wählen:</h3>
+            <div class="mode-selector">
+                <button class="btn btn-primary active" onclick="switchMode('single')">Einzelfall</button>
+                <button class="btn" onclick="switchMode('practice')">Trainingsmode</button>
+                <button class="btn" onclick="switchMode('all')">Alle durchgehen</button>
+            </div>
+        </div>
+
+        <div id="caseContainer"></div>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        const allCases = [{"id": 1, "caseName": "Chirurgie", "specialty": "Chirurgie", "anamnese": "62-jährige Patientin mit 2-3 Tagen Schmerz im linken Unterbauch. Schmerz ist progressiv über Tage, heute morgen schlimmer. Begleitend leichtes Fieber 38,2°C. Sie hatte in den letzten Jahren schon 2-mal ähnliche Episoden, die spontan abheilten. Ernährung: moderat mit Ballaststoffen.", "koerperlich": "Abwehrspannung und Resistenz deutlich positiv im linken Unterbauch (Sigmoid-Region). Loslaßschmerz deutlich vorhanden. McBurney-Punkt NEGATIV. Darmgeräusche normal. Rektale Untersuchung: Schmerzen am linken Rektum, keine Massen.", "vitale": "RR 128/76 mmHg, HF 88/min, AF 16/min, SpO2 98%, T 37,8°C", "labor": "Leukozyten 14.200/μL, CRP 8,5 mg/dL, Kreatinin 0,9 mg/dL, Hämoglobin 13,1 g/dL", "bildgebung": "CT-Abdomen: Entzündetes Divertikel in Sigmoid. Lokalisierte Entzündung (Fett-Stranding). KEINE freie Luft. Kein Abscess.", "q": ["Welche Differenzialdiagnosen?", "Klassifikation nach Hansen & Stock?", "Therapeutisches Vorgehen bei unkomplizierter Diverticulitis?", "Indikation für elektive Sigmaresektion?"], "answers": ["Appendizitis (eher rechtsseitig), Kolonkarzinom, Morbus Crohn, Ovarialpathologien, Harnwegsinfekt, mesenteriale Ischämie", "Hinchey Grad I: kleine lokalisierte Entzündung ohne Perforation, Abscess oder generalisierte Peritonitis", "Leichte Fälle: ambulant mit oralen Antibiotika oder keine AB. Mittelschwere: stationär mit IV Antibiotika (Metronidazol + Cephalosporin), NPO, IV Flüssigkeit", "Nach 2-3 rezidivierenden Episoden: elektive Sigmaresektion nach 4-6 Wochen. Rezidiv-Risiko >35% nach 2. Episode"]}, {"id": 2, "caseName": "Kardiologie", "specialty": "Kardiologie", "anamnese": "55-jähriger männlicher aktiver Raucher (40 Pack-Jahre) mit plötzlichem oppressivem Brustschmerz seit 40 Minuten. Schmerz zentral, 9/10 Intensität. Profuse Diaphorese, Übelkeit. Familiengeschichte: Vater MI im Alter 58 Jahren. Keine vorbekannte KHK.", "koerperlich": "Ängstlich, in Distress, profuse Diaphorese. Kalte, klamme Extremitäten. Herzaktion regelmäßig, HF 98/min. Normale Herzklappentöne, kein Murmur. Lungenfelder klar bilateral, keine Rasselgeräusche.", "vitale": "RR 128/78 mmHg, HF 98/min, AF 18/min, SpO2 97%, T 37,1°C", "labor": "Troponin I 0,02 ng/mL (grenzwertig, frühe Messung), CK-MB 8,5 ng/mL, Myoglobin 120 μg/L, D-Dimer 0,4 μg/mL", "bildgebung": "EKG: ST-Hebung 2-3 mm in II, III, aVF (inferiorer STEMI!), reziproke ST-Senkung I, aVL, Q-Zacken in III (transmural)", "q": ["Infarktlokalisierung und betroffenes Gefäß?", "Komplikationen des inferioren STEMI?", "Reperfusions-Management mit Timing?", "Warum sind Nitrate kontraindiziert hier?"], "answers": ["Inferiorer STEMI transmural mit RCA-Okklusion (90%) oder LCx (10%)", "AV-Block 2./3. Grad, kardiogener Schock, Kammerflimmern, RV-STEMI, Sinusknotendysfunktion", "Primäre PCI <90 min. Dual antiplatelet (Aspirin 600mg + P2Y12i), UFH 60-70 IU/kg, Beta-Blocker", "KONTRAINDIZIERT bei RV-Infarkt! RV ist preload-abhängig. Nitrate reduzieren Preload → kardiogener Schock"]}, {"id": 3, "caseName": "Notfallmedizin", "specialty": "Notfallmedizin", "anamnese": "71-jährige Patientin mit Palpitationen und Dyspnoe seit 2 Stunden. Herzrasen mit irregulären Flatterwellen. Bekannte Hypertonie seit 20 Jahren (Amlodipine 5mg). ERSTE Episode von Palpitationen. Leugnet Brustschmerz, Synkope. Kein Fieber.", "koerperlich": "Besorgt aber nicht in extremem Distress. Herzauskultation: schnelle, völlig unregelmäßige Herzfrequenz (klassisch für VHF). Kein Murmur. Halsvenenstaung nicht prominent. Lungenfelder klar, keine Rasselgeräusche.", "vitale": "RR 145/88 mmHg, HF 135/min völlig unregelmäßig (RVR), AF 18/min, SpO2 95%, T 37,3°C", "labor": "Troponin I normal, BNP 180 pg/mL (grenzwertig), TSH normal, Elektrolyte normal, Hämoglobin normal", "bildgebung": "EKG: Absolut unregelmäßiger Rhythmus, keine P-Wellen erkennbar. Fibrillationswellen ~300-400/min atrial. Ventrikuläre Antwort ~135/min. Keine ST-Veränderungen.", "q": ["VHF mit RVR definieren und Gefährdung bewerten?", "CHA2DS2-VASc-Score berechnen. Antikoagulation indiziert?", "Frequenzkontrolle vs. Rhythmuskontrolle?", "Medikamentöse Optionen zur Frequenzkontrolle?"], "answers": ["VHF mit RVR: Chaotisches Flimmern Atrien 300-400/min, AV-Knoten leitet viele weiter (>135/min ventrikulär). Gefährdung moderat: stabil, aber Risiko Ischämie, Thromboembolie, Tachykardie-induzierte Kardiomyopathie", "Score: H=1, A=1, S=1 = Score 3-4. Bei Frauen ≥3: ANTIKOAGULATION INDIZIERT mit DOAC", "FREQUENZKONTROLLE als First-Line. Einfacher, schneller, Prognose gleich wie Rhythmuskontrolle", "Beta-Blocker: Metoprolol 25-100mg 3x/d oder IV 2,5-5mg. Diltiazem 120-360mg/d. Verapamil 120-480mg/d"]}, {"id": 4, "caseName": "Chirurgie", "specialty": "Chirurgie", "anamnese": "68-jähriger Mann mit chronischer NSAR-Einnahme (Ibuprofen 400-600mg täglich seit 15 Jahren für Arthritis) stellt sich vor mit MASSIVEM akutem epigastrischem Schmerz seit 2 Stunden. Schmerz diffus über ganzen Bauch, 10/10 Intensität. Intensiver Schweiß, Übelkeit, Angst. Lange Geschichte Dyspepsie, niemals PPI-Therapie. Letzte Mahlzeit schwer und fettig.", "koerperlich": "Sehr krank, blass, diaphoretisch, extremer Distress. Bauch SEHR angespannt ('Bretbauch'). Abwehrspannung überall, nicht lokalisiert. Loslaßschmerz massiv. Darmgeräusche abwesend (paralytischer Ileus).", "vitale": "RR 102/62 mmHg (HYPOTENSION - Schock!), HF 126/min (Tachykardie), AF 24/min, SpO2 94%, T 38,2°C", "labor": "Leukozyten 16.800/μL, Laktat 2,8 mmol/L (erhöht), Kreatinin 1,4 mg/dL, Amylase 200 U/L", "bildgebung": "Röntgen Thorax: FREIE LUFT unter Zwerchfell (pathognomisch!). CT-Abdomen: Perforation Vorderwand Magen (~1-1,5cm), Pneumoperitoneum, Peritonealflüssigkeit", "q": ["Diagnose und pathophysiologische Begründung?", "Warum ist sofortige OP kritisch?", "Primary Repair vs. Gastrektomie?", "Postoperative Komplikationen?"], "answers": ["Perforiertes Magengeschwür. Diagnose: akuter massiver Schmerz bei NSAR-Patient, Bretbauch, Peritonitis, FREIE LUFT unter Zwerchfell (pathognomisch!)", "NOTFALL-OP SOFORT! Jede Minute erhöht Mortalität. Verzögerung >24h: Mortalität 40-50%, OP-Mortalität ~10%", "PRIMARY REPAIR (Vierschichtnaht + Omentoplastie) bevorzugt. GASTREKTOMIE nur bei Malignität-Verdacht", "Sepsis ~40-60%, Naht-Insuffizienz ~5-10%, Pankreatitis, paralytischer Ileus, GI-Blutung"]}, {"id": 5, "caseName": "Neurologie", "specialty": "Neurologie", "anamnese": "74-jähriger Mann erwacht mit rechtsseitiger Armparese und Sprachstörung vor 90 Minuten (IM ZEITFENSTER für rtPA!). Hypertonie seit 40 Jahren (schlecht kontrolliert, SBP oft >160). Bekannt VHF seit 5 Jahren (NICHT antikoaguliert). Frühere TIA vor 2 Jahren. Raucht NICHT.", "koerperlich": "Alert aber Expressiv-Aphasie. NIHSS ~8 (moderat). Fazialis-Parese rechts (mild), Arm-Kraft rechts 4/5, Bein-Kraft rechts 5/5 (normal). Keine Ataxie. Keine visuellen Feldefekte.", "vitale": "RR 162/92 mmHg, HF 88/min (unregelmäßig - VHF), AF 18/min, SpO2 96%, T 37,0°C", "labor": "Glucose 145 mg/dL, INR 0,9 (nicht antikoaguliert), Thrombozyten 220.000/μL, PT/aPTT normal", "bildgebung": "CT Schädel: KEINE Blutung (kritisch für rtPA!). Diffusion-MRT: neue ischämische Läsion rechte MCA-Versorgung", "q": ["rtPA-Eligibilität? Zeitfenster? Kontraindikationen?", "TOAST-Klassifikation?", "Sofort- und Langzeitmanagement?", "Blutdruck-Management mit rtPA?"], "answers": ["Ja, im Zeitfenster: 90 min <4,5 Stunden. KEINE absoluten KI: CT keine Blutung, INR 0,9, Thrombozyten normal, Glucose 145", "CARDIOEMBOLIC (wahrscheinlich): VHF 5 Jahre, nicht antikoaguliert, MCA-Verteilung", "rtPA 0,9mg/kg IV (10% bolus 1min, Rest 60min). Neuro-Monitoring q30min. Repeat CT 24h. AB nach 24h: DOAC. Statine 80mg. Rehabilitation sofort", "Ziel: SBP <180, DBP <110. Diese Patient SBP 162 = OK. Vorsicht Überkorrektion nach rtPA"]}, {"id": 6, "caseName": "Notfallmedizin", "specialty": "Notfallmedizin", "anamnese": "71-jährige Patientin mit rezidivierender HWI stellt sich vor mit akutem Beginn: plötzliche Verwirrtheit, Schüttelfrost. Am Vortag einfache Urin-Symptome (Dysurie, Pollakisurie). Heute: HEFTIGE Verwirrtheit, Schüttelfrost. Patient fühlt sich sehr KALT obwohl T 39,8°C (klassisch für Sepsis!). Bekannt: Diabetes Typ 2, CKD Stadium 3.", "koerperlich": "Verwirrt, somnolent, nicht voll alert (KRITISCH!). Haut marmoliert und livid. Extremitäten: sehr kalt und cyanotisch. Kapillar-Refill >2 Sekunden. CVA-Klopfschmerz POSITIV beidseits. Abdomen: weich, keine Peritonitis.", "vitale": "RR 92/56 mmHg (KRITISCH hypotensiv = Schock!), HF 118/min, AF 22/min, SpO2 94%, T 39,8°C", "labor": "Leukozyten 18.500/μL, Thrombozyten 95.000/μL (DIC-Signal!), Kreatinin 2,1 mg/dL, Bilirubin 2,2 mg/dL, PT 16 sec, Laktat 3,2 mmol/L", "bildgebung": "Röntgen Thorax: bilaterale Infiltrate. Sonographie: BILATERALE Hydronephrose (KRITISCH! Urin obstruiert)", "q": ["Sepsis/septischer Schock Definitionen nach Sepsis-3?", "Infektionsquelle? Warum Hydronephrose kritisch?", "6-Stunden-Bundle detailliert?", "Vasopressor, Flüssigkeit, Urology-Intervention Timing?"], "answers": ["Sepsis: vermutete Infektion + SIRS (T >38, HF >90, AF >20, Leukozyten >12.000). + Organversagen = SEPTISCHER SCHOCK (Hypotension + Laktat erhöht)", "Quelle: UROSEPSIS. KRITISCH: Bilaterale Hydronephrose = Urin obstruiert! Stase mit Infektion erhöht Bakteriämie-Risiko MASSIV", "6h-Bundle: (1) Blutkultur vor AB; (2) Breites Spektrum AB ≤1h: Ceftriaxon 2g + Gentamicin 3-5mg/kg; (3) LR 30mL/kg über 3h; (4) Vasopressor wenn Hypotension persistiert", "Vasopressor: Norepinephrin 0,05-2 μg/kg/min (Ziel MAP ≥65). Flüssigkeit: 30mL/kg. KRITISCH: Dringende Urology-Intervention (Stents/PNC) innerhalb STUNDEN! Mortalität 20-50% ohne Drainage"]}, {"id": 7, "caseName": "Urologie", "specialty": "Urologie", "anamnese": "45-jähriger Mann mit plötzlichem linksseitigen Flankenschmerz seit 2 Stunden. Schmerz ist intensiv, kolikartig, austrahlend in die Leiste. Übelkeit und Erbrechen. Keine Dysurie oder Pollakisurie. Keine Fieber. Keine signifikante Urgeschichte außer dieser Episode.", "koerperlich": "Wirkt in Distress, bewegungslos liegend. Blutdruck normal, Herzaktion regelmäßig. Abdomen: Flankendruckschmerz links, besonders CVA-Schmerz positiv links. McBurney-Punkt negativ. Darmgeräusche normal. Keine Peritonitis-Zeichen.", "vitale": "RR 148/82 mmHg (erhöht von Schmerz), HF 98/min, AF 18/min, SpO2 98%, T 37,2°C", "labor": "Urinstatus: Erythrozyten 50/μL (erhöht), Leukozyten negativ (keine Infektion), Nitrite negativ, Kristalle negativ. Kreatinin 0,95 mg/dL (normal). Leukozyten 7.500/μL (normal).", "bildgebung": "CT Abdomen/Becken ohne Kontrast (Gold-Standard): 8mm Stein in linkem ureteropelvic junction mit proximaler Hydronephrose. Keine Infektion erkennbar. Kein Abscess.", "q": ["Diagnose basierend auf Klinik und Bildgebung?", "Differenzialdiagnosen des akuten Flanken-/Leistenschmerzes?", "Akutes Management? Indikationen für Intervention?", "Komplikationen unbehandelter Urolithiasis?"], "answers": ["Nephrolithiasis (Nierenstein) mit Kolik. Diagnose: akuter kolikartiger Schmerz, CVA-Schmerz, Erythrozyturie, CT-Stein mit proximaler Hydronephrose", "Pyelonephritis (aber keine Fieber, Leukozyturie, nitrite), aortales Aneurysma (aber stabil), AAA (aber stabil), Diverticulitis (aber rechts), pAVK", "Akut: Schmerztherapie (NSAR wie Diclofenac 75mg IV oder Opioid), Rehydration IV, antiemetic. Kleine Steine (<6mm, ca. 80%) üblicherweise spontane Passage. Abwarten vs. sofortige Intervention: abhängig von Symptom-Kontrolle, Nierenfunktion", "Urosepsis (wenn auch infiziert), komplette Harnobstruktion mit ARF, Nierenabszess, Perforation Ureter, Hydronephrose mit Nierenschädigung"]}, {"id": 8, "caseName": "Pneumologie", "specialty": "Pneumologie", "anamnese": "48-jährige weibliche Patientin mit 1 Woche progressive Dyspnoe und Husten mit mukopurulentem Auswurf. Bekannt COPD GOLD II (FEV1 50-79% predicted) seit 5 Jahren, raucht aktiv 15 Zigaretten/Tag. Kürzlich Exazerbation vor 3 Wochen (Pneumonie, behandelt mit Antibiotika). Keine Brustschmerz. Keine Hämoptoe.", "koerperlich": "Wirkt dyspnoisch, SpO2 88% an Raumluft ohne O2. Herzfrequenz 102/min. RR 26/min (Tachypnoe). Lungenuntersuchung: verlängertes Ausatmen, pfeifende Atemgeräusche (Wheezing) bilateral, besonders basal. Keine Ödeme, keine Halsvenenstaung (schließt HI aus).", "vitale": "RR 142/88 mmHg, HF 102/min, AF 26/min, SpO2 88% Raumluft, T 38,1°C (leichtes Fieber)", "labor": "Leukozyten 12.500/μL (leicht erhöht), CRP 3,2 mg/dL (leicht erhöht), Kreatinin normal, BNP normal (schließt HI aus). BGA: pH 7,38, pCO2 45 mmHg (grenzwertig erhöht), pO2 68 mmHg (hypoxämisch), HCO3- 24 mEq/L (normal)", "bildgebung": "Röntgen Thorax: neue bilaterale bronchiale Verdickungen (Bronchitis), keine Infiltrate (nicht typisch für Pneumonie), keine Kardiomegalie, Lungenfelder sonst überblähter Eindruck (COPD-Muster)", "q": ["COPD-Exazerbation erkennen? Schweregrad einschätzen?", "Differenzialdiagnosen von COPD-Exazerbation?", "Akutes Management der exazerbasierten COPD?", "Längerfristige Therapieoptimierung?"], "answers": ["COPD-Exazerbation: progressive Dyspnoe, verändertes Husten-Muster, Fieber, erhöhte WBC, BGA-Veränderungen. Schweregrad: gemäßigt-schwer wegen Hypoxämie (SpO2 88%), Tachypnoe, Tachykardie", "Pneumonie (aber kein Infiltrat auf CXR), Pneumothorax (aber keine Hyperresonanz), Lungenembolie (aber keine typisch Zeichen), akute HI (aber BNP normal, keine JVD), Anaphylaxie (aber langsames Onset)", "1) O2 zur Ziel-SpO2 88-92% (nicht >94%! CO2-Retention-Risiko); 2) Bronchodilatator: Salbutamol + Ipratropium inhalativ; 3) IV Kortikosteroide: Prednisolon 50mg; 4) Antibiotika wenn eitrig (hier eher Virusexazerbation, aber können gegeben werden)", "Raucherentwöhnung (kritisch!), ICS/LABA inhalativ optimization, LAMA hinzufügen wenn nicht schon, Pulmonale Rehabilitation, Grippeschutzimpfung, Pneumococcal"]}, {"id": 9, "caseName": "Gastroenterologie", "specialty": "Gastroenterologie", "anamnese": "52-jähriger männlicher Patient mit 3 Monaten progressive Dysphagie zuerst für feste Nahrung, jetzt auch Flüssigkeiten. Gewichtsverlust 8 kg in 3 Monaten. Raucher 30 Pack-Jahre, Alkohol 40g/Tag. Keine Brustschmerz, keine Regurgitation. Mäßige Reflux-Symptome.", "koerperlich": "Wirkt kachektisch, Gewicht vermindert. Mundschleimhäute rosa, keine Läsionen. Pharynx: nicht prominent entzündet. Abdomen: weich, Hepatomegalie nicht erkennbar. Lymphknoten: keine palpablen zervikalen oder supraklavikulären Lymphknoten (aber kleine können verborgen sein).", "vitale": "RR 125/78 mmHg, HF 82/min, AF 16/min, SpO2 96%, T 37,1°C", "labor": "Hämoglobin 10,2 g/dL (Anämie von chronische Malabsorption/Blutung), MCV 75 fL (mikrozytär), Eisen 25 μg/dL (niedrig), Ferritin 10 ng/mL (niedrig), Albumin 3,1 g/dL (niedrig von Malnutrition), CEA normal, CA 19-9 normal", "bildgebung": "Ösophagus-Breischluck: Verengung im mittleren Drittel des Ösophagus (ca. 26 cm von Incisivi), wallartiges, stenosierendes Muster mit shouldering (klassisch für Karzinom). Endoskopie: Ösophaguskarzinom mit Ulceration und Stenose, Gewebeproben bestätigen squamous cell carcinoma.", "q": ["Wahrscheinliche Diagnose? Klassifikation?", "Differenzialdiagnosen der Dysphagie?", "Staging und Prognose?", "Therapeutische Optionen?"], "answers": ["Ösophaguskarzinom (squamous cell carcinoma) mittleres Drittel mit Stenose und Ulceration. Risikofaktoren: Rauchen, Alkohol, Reflux. Klassische Zeichen: progressive Dysphagie, Gewichtsverlust, Anämie von GI-Blutung", "Achalasia (aber breiter Dilatatation, nicht stenosierendes Bild), eosinophile Ösophagitis (aber jüngere Patienten, keine Dysphagie solchs Ausmaß), Reflux-Striktur (aber Klinik klassischer für Karzinom), Adenokarzinom (möglich aber squamous more common)", "Staging: endoskopisch bestätigt, CT/MRT für Lokale Extension + Lymphknoten, PET-CT für Metastasen (Lunge, Leber, Knochen). Prognose: Ösophaguskarzinom allgemein 5-Jahres-Überlebenrate ~20% (schlecht), mittleres Drittel Prognose besser als proximales/distales", "Optionen: neoadjuvante Chemoradiotherapie dann OP (Ösophagektomie), oder alleinige Radiotherapie/Chemotherapie wenn nicht operativ kandidat, oder Endoskopische Ablation wenn sehr früh. Palliativ: Stent, dilatation"]}, {"id": 10, "caseName": "Chirurgie", "specialty": "Chirurgie", "anamnese": "35-jährige weibliche Patientin mit akutem Beginn starker Schmerz im rechten Oberbauch seit 6 Stunden. Der Schmerz strahlt aus in die rechte Schulter. Sie hat Übelkeit und 1x Erbrechen. Keine Fieber. Sie hatte früher schon gelegentliche ähnliche Schmerzen, aber niemals solch intensiv. Ernährung: fettig.", "koerperlich": "Wirkt in Distress von Schmerz. Blutdruck 128/82 mmHg, Herzfrequenz 98/min. Abdomen: RUQ Druckschmerz positiv, Murphy-Zeichen POSITIV (Atemhalt mit Inspiration bei Druck der Gallenblase), keine Peritonitis-Zeichen, keine Hepatomegalie erkennbar.", "vitale": "RR 128/82 mmHg, HF 98/min, AF 18/min, SpO2 97%, T 37,8°C", "labor": "Leukozyten 11.200/μL (grenzwertig erhöht), CRP 2,1 mg/dL (grenzwertig), Bilirubin 0,9 mg/dL (normal), ALT/AST normal, Lipase normal (schließt Pankreatitis aus). ALP normal.", "bildgebung": "Ultraschall Abdomen: Gallenblase vergrößert (4,2 cm), Gallensteine (größter ca. 1,2 cm), Gallenblasenwand leicht verdickt (3,2 mm), positive sonographische Murphy-Zeichen. KEINE freie Flüssigkeit. Gemeinsamer Gallengang normal kalibriert (<4 mm), keine Dilatation.", "q": ["Diagnose? Cholezystitis-Klassifikation?", "Differenzialdiagnosen des akuten RUQ-Schmerzes?", "Akutes Management? Antibiotika? OP-Timing?", "Mögliche Komplikationen der akuten Cholezystitis?"], "answers": ["Akute Cholezystitis (unkompliziert). Diagnose: RUQ-Schmerz mit Ausstrahlung zur Schulter, Murphy-Zeichen positiv, Ultraschall: Steine, verdickte Wand, Gallenblase-Vergrößerung", "Akute Hepatitis (aber Enzyme normal), Pneumonie rechts (aber Lunge clear), pyelonephritis (aber keine CVA-Schmerz, keine Urinsymptome), perforiertes Ulkus (aber epigastrisch), Pankreatitis (aber Lipase normal)", "Akut: NPO, IV Flüssigkeit, Schmerztherapie, Antibiotika (Ceftriaxon + Metronidazol wegen anaeroben Coverage). Cholezystektomie: zeitnah (innerhalb 72h = early cholezystektomie bevorzugt zu verzögerter Cholezystektomie). Antibiotika 24-48h perioperativ", "Perforation der Gallenblase (free perforation → Peritonitis, atau contained → Abscess), biliäre Pankreatitis (wenn Stein im CBD), cholangitis (wenn CBD-Stein), emphysematöse Cholezystitis (wenn Gasbildner-Infektion, älter/Diabetiker)"]}, {"id": 11, "caseName": "Kardiologie", "specialty": "Kardiologie", "anamnese": "68-jähriger männlicher Patient mit bekannter KHK (2-Gefäß-Erkrankung, stent vor 3 Jahren) stellt sich vor mit progressiver Belastungsdyspnoe über 2 Wochen. Heute auch Dyspnoe in Ruhe. Bekannt Hypertonie, Diabetes. Medikamente: ASS, Atorvastatin, Ramipril, Metoprolol, Furosemid. Letzter MI vor 5 Jahren.", "koerperlich": "Wirkt dyspnoisch auch in Ruhe. Blutdruck 158/92 mmHg, Herzfrequenz 88/min (trotz Beta-Blocker). JVD prominent (5-7 cm), Hepatojugularreflex positiv. Herzauskultation: S3-Gallop vorhanden (klassisch für HI). Bilaterale basiläre Rasselgeräusche. Periphere Ödeme 2+ Knöchel, Unterschenkel.", "vitale": "RR 158/92 mmHg, HF 88/min, AF 22/min, SpO2 92% an RA, T 37,0°C", "labor": "Troponin I 0,04 ng/mL (grenzwertig erhöht, kann chronisch erhöht sein bei HI), BNP 520 pg/mL (erhöht), Kreatinin 1,8 mg/dL (erhöht baseline ~1,2 wegen HI), Hämoglobin 12,1 g/dL (mild anämie), Glukose 165 mg/dL", "bildgebung": "Röntgen Thorax: Kardiomegalie (CTR 0,58), Kerley-B Linien bilateral, bilaterale Infiltrate basal (Lungenödem). EKG: Q-Zacke in I/aVL (alten anterior MI), ST-Senkung diffus (kann chronisch sein), T-Inversion diffus.", "q": ["Diagnose? HI-Klassifizierung nach NYHA/ACC-AHA?", "Ursachen der akuten Exazerbation der HI?", "Managementplan für akute dekompensierte HI?", "Chronische Therapieoptimisierung?"], "answers": ["Akute dekompensierte Herzinsuffizienz mit reduzierten Ejektionsfraktion (HFrEF). NYHA IV oder ACC-AHA Stage D. Zeichen: Orthopnoe, Dyspnoe Ruhe, S3-Gallop, JVD, Hepatomegalie, Ödeme, Rasselgeräusche, BNP >400, Kardiomegalie", "Ischämie (trotz ASS/Stent, Troponin leicht erhöht), hypertensive Exazerbation, Arrhythmie, Infekt/Sepsis, Medikamenten-Compliance (Patient vergisst Furosemid?), Nierenfunktion-Verschlechterung, Anämie", "1) O2 wenn SpO2 <90%; 2) IV Furosemid 40-80mg (Diurese!), titrate up; 3) Nitroglycerin wenn RR toleriert; 4) Inotrope (Dobutamin) wenn Schock; 5) Urin-Output Monitoring; 6) Echokardiographie (Ejektionsfraktion?); 7) Coronarangiographie wenn ischemia verdacht", "Verbesserung von ACE-Inhibitor/ARB (Ramipril hochdosieren zu Zieldosis), Beta-Blocker optimization, Aldosteron-Antagonist (Spironolacton) hinzufügen, SGLT2i (Empagliflozin), Device-Therapie (ICD wenn QRS >120, EF ≤35%), Cardiac Rehabilitation, Rauchen Entwöhnung"]}, {"id": 12, "caseName": "Unfallchirurgie", "specialty": "Unfallchirurgie", "anamnese": "24-jähriger männlicher Patient nach Motorradunfall mit Hochgeschwindigkeits-Kollision vor 3 Stunden. Der Patient wurde von der Straße geschleudert und verlor Bewusstsein für ~2 Minuten am Unfallort. Notarzt fand Patient glasig, verwirrt, mit blutiger Kopfplatzwunde. Transporte in KH mit c-spine Stabilisierung.", "koerperlich": "Patient jetzt wach aber verwirrt, GCS 13 (besserung von initial wahrscheinlich 11). Feine Kopfplatzwunde temporal links mit Blutung. Signifikante periorbital Schwellung beidseits (Kampfzeichen?). Nase: leichte Deviation nach rechts. Otoskopie: Hämotympanon links (Zeichen Basilaris-Fraktur?). Neurologisch: Pupillen gleich rund, leicht reaktiv; keine Fazialis-Asymmetrie. Extremitäten: rechtes Bein mit angulatorischer Deformität oberhalb Knie (Fraktur erkennbar), rechtes Fuß kalt und schwach palpabel (Perfusion-Concern?).", "vitale": "RR 125/78 mmHg, HF 105/min, AF 20/min, SpO2 95% mit nasal cannula, T 37,2°C", "labor": "Blutung: Hämoglobin 11,2 g/dL (von 14 erwartet - suggiert Blutung), Thrombozyten normal, Fibrinogen 250 mg/dL (niedrig-normal), PT/aPTT normal (kein Koagulopathie initial), D-Dimer erhöht (erwartet nach Trauma)", "bildgebung": "CT Schädel: Epidurales Hämatom 8 mm links temporal (kein Mittellinie-Shift noch, aber Borderline für OP). Schädelbasis-Fraktur links petrosum mit CSF-Otorrhoe-Risiko. CT-C-Spine: unkomplizierte Frakturen C5/C6 (kein Neuro-Defizit, keine Instabilität-Zeichen). CT Thorax/Abdomen/Pelvis: minimal Pneumothorax links (1 cm, nicht spannend), Femur-Fraktur rechts mid-shaft mit leichtem Valgus-Angulation und schmal Fraktur-Gap.", "q": ["Epidurales Hämatom Management? OP-Indikation?", "Zeichen und Behandlung von Basilaris-Fraktur?", "C-Spine Fraktur Management?", "Trauma-Sequenzierung und Priorisierung der Interventionen?"], "answers": ["Epidurales Hämatom <10mm, GCS 13 (relativ stabil), kein Mittellinie-Shift = konservatives Management mit Serial Neurochecks und Wiederholung CT wenn Verschlechterung. OP-Indikation: >10mm, GCS <8, Mittellinie-Shift >5mm, oder neurologische Verschlechterung", "Basilaris-Fraktur Zeichen: CSF Otorrhoe/Rhinorrhoe, Kampfzeichen, Hämotympanon. Management: Antibiotika-Prophylaxe (um Meningitis zu vermeiden), Kopf erhöht, CSF-Drainage nur wenn Hydrocephalus, meist spontane Heilung", "C5/C6 Fraktur ohne neuro-Defizit oder Instabilität = Stabilisierung mit Halo-Weste, serielle Radiographien. Keine OP notwendig wenn keine Instabilität. Follow-up in 6-12 Wochen", "Priorität: A-B-C (Atemweg, Breathing, Circulation). Dieser Patient: minimal pneumothorax nicht spannend → watch, Femur-Fraktur braucht Intramedullary-Nailing (innerhalb 24-48h). Serial CT-Kopf wegen epiduralem Hämatom. Antibiotika wegen Schädelbasis-Fraktur"]}, {"id": 13, "caseName": "Pneumologie", "specialty": "Pneumologie", "anamnese": "52-jähriger männlicher ehemaliger Asbest-Arbeiter (30 Jahre Exposition, letzte Exposition vor 15 Jahren) mit 3 Monaten progressive Dyspnoe und Brustschmerz. Husten trocken, kein Auswurf. Keine Hämoptoe. Raucher, 20 Pack-Jahre (aber viele Jahren Quit). Keine Fieber, kein Nachtschweißer.", "koerperlich": "Wirkt mäßig dyspnoisch, SpO2 91% an RA. Herzfrequenz 82/min, RR normal. Thorax: Kyphose erkennbar, verringerte Atemgeräusche basal bilateral (reduzierte Lungenfunktion). Keine Ödeme, keine Halsvenenstaung.", "vitale": "RR 128/78 mmHg, HF 82/min, AF 16/min, SpO2 91% an Raumluft, T 37,1°C", "labor": "Hämoglobin 14,2 g/dL (normal), Leukozyten normal, CRP normal (schließt Infektion aus), BNP normal (schließt Herzversagen aus). Asbestos-Serologie: Anti-asbestos Antikörper negativ (nicht spezifisch aber supportiv)", "bildgebung": "Röntgen Thorax: bilaterale pleurale Verdickung mit Kalkifizierung ('pleural plaques', klassisch für Asbest), kleine Pleura-Ergüsse bilateral, minimal Infiltrate basal (könnte Asbestose sein). Hochauflösungs-CT: diffuse fibrosis basal und lateral, konsistent mit Asbestose, bilaterale Pleura-Plaques mit Kalkifizierung. Pulmonale Funktion: FEV1 68% predicted (GOLD II-ähnlich), FVC 72%, Ratio 94% (restriktiv Muster!)", "q": ["Diagnose? Differenzialdiagnosen?", "Asbestose vs. Mesotheliom: wie unterscheiden?", "Screening und Überwachung?", "Prognose und Prävention?"], "answers": ["Asbestose (Asbest-bedingte Lungenfibrose). Diagnose: Asbest-Exposition, progressive Dyspnoe, HR-CT fibrosis basal/lateral, Pleura-Plaques, restriktive Spirometrie. Nicht Malignität (noch keine Zeichen)", "Asbestose: gutartig, progressive Fibrose, geringe Malignität-Rate. Mesotheliom: aggressive Malignität, Pleura-Effusion groß, aggressive CT-Bild, schnellere Progression, schlechte Prognose. Unterscheidung: Imaging (Effusion Größe, parenchym vs. pleural fokus), Pleura-Biopsie wenn Verdacht Mesotheliom", "Screening: jährliche Röntgen oder CT Thorax, Spirometrie alle 1-2 Jahre. Screening für andere asbest-Krebse (Larynx, Magen)", "Prognose: bessere als Mesotheliom aber variable (FEV1 Prognose). Median Überlebensrate nach Diagnose ~8-10 Jahre aber variable. Prävention: keine weitere Asbest-Exposition, Rauchausbruch (Synergismus mit Rauchen), Schutzimpfung (Pneumococcal, Influenza)"]}, {"id": 14, "caseName": "Neurologie", "specialty": "Neurologie", "anamnese": "62-jährige weibliche Patientin mit 6 Wochen progressive Kraftschwäche in den Beinen, beginnend mit rechtem Bein. Jetzt beide Beine weich, kann kaum gehen. Zusätzlich Paresthesien in den Füßen bilateral. Keine Schmerzen im Rücken. Keine Sphinkter-Symptome oder sexuelle Dysfunktion. Keine vorbekannte Erkrankung.", "koerperlich": "Wirkt besorgt. Mental Status: normal, Gedächtnis: normal. Kraniale Nerven: normal. Motorisch: rechtes Bein Kraft 3-4/5 (Schwäche Hip Flexion), linkes Bein 4/5. Normale Kraft Arme 5/5. Reflexe: schwach knees bilateral, ankles schwach (hyporeflexia). Tonus: normal. Sensibilität: Polyneuropathie-Muster, glove-and-stocking verringerte Sensibilität Füße bilateral (Vibration und Propriozeption besonders betroffen). Neurologische Tests: Romberg-Test schwach positiv (Stand-Unsicherheit), Tandem-Gait not possible.", "vitale": "RR 122/78 mmHg, HF 76/min, AF 16/min, SpO2 97%, T 37,1°C", "labor": "Blutglukose 286 mg/dL (ERHÖHT!), HbA1c 9,2% (schlecht kontrolliert Diabetes), Kreatinin 1,2 mg/dL (normal), B12 380 pg/mL (borderline niedrig, aber nicht kritisch), Folsäure 3,5 ng/mL (normal), TSH normal, VitD 18 ng/mL (niedrig aber nicht kritisch).", "bildgebung": "MRT Lumbalsäule: keine Kompressionsmyelopathie, keine Tumoren, keine Infektion. Nerven-Leitungs-Studien: verringerte Amplitude der sensory action potentials (SAP) Sural-Nerv bilateral mit verlängerte distal latency, konsistent mit AXONAL demyelinisierendes pattern.", "q": ["Diagnose? Differenzialdiagnosen der Polyneuropathie?", "Warum ist B12-Mangel in diesem Fall wahrscheinlich NICHT Ursache?", "Management der Diabetischen Polyneuropathie?", "Prognose und Prävention?"], "answers": ["Diabetische distale sensorische Polyneuropathie. Diagnose: Diabetes Type 2 (Glucose 286, HbA1c 9,2%), 6 Wochen progressive Schwäche/Paresthesien Füße bilateral, glove-and-stocking Sensibilität-Verlust, hyporeflexia, NCS axonal pattern. Keine Rücken-Schmerz oder Sphinkter-Involvement (schließt Myelopathie/Kauda Equina aus)", "B12 380 ist borderline, NCS-Muster zeigt primarily motor demyelinisierung, nicht typisch B12-Mangel (würde eher dorsal-column-Trakt-Zeichen, posterior-column-Vibration-Verlust zeigen). Auch neurologische Untersuchung nicht klassisch B12-Mangel", "1) Glykämische Kontrolle (primär!): Insulin wenn notwendig, Ziel HbA1c <7%; 2) Schmerzmanagement: Gabapentin 900-3600mg/d oder Pregabalin 150-600mg/d; 3) Fuß-Care (Prevention von Ulcers); 4) B12-Supplement wenn niedrig; 5) Physical Therapie für Kräftigung und Balance", "Prognose: Variable - mit guter glykämischer Kontrolle können stabilisieren, manchmal auch leichte Verbesserung. Ohne Kontrolle: progressive Verschlimmerung bis vollständige Funktionsverlust. Prävention: aggressive Diabetes-Management ist SCHLÜSSEL"]}, {"id": 15, "caseName": "Gastroenterologie", "specialty": "Gastroenterologie", "anamnese": "45-jähriger männlicher Patient mit 2 Wochen Durchfall (5-6x täglich, wässrig, keine Blut), Abdominale Krämpfe, Fieber intermittierend bis 38,5°C. Kürzlich Hospital-Aufenthalt vor 3 Wochen (chirurgisches Repair, erhielt Antibiotika Cephalosporin). Keine Reisegeschichte. Kontakt zu anderen Patienten mit Durchfall? Nein bekannt. Keine Laktoseintoleranz oder bekannte IBD.", "koerperlich": "Wirkt mäßig krank, sieht dehydriert aus. Blutdruck 115/70 mmHg (orthostatic check: 110/70 sitzend → 105/68 stehend = mild orthostatic). Herzfrequenz 88/min. Abdomen: mild diffuser Druckschmerz, keine Peritonitis-Zeichen, Darmgeräusche hyperaktiv (früher für Diarrhea). Keine Ödeme, Gewicht reduziert ~2 kg seit 2 Wochen.", "vitale": "RR 115/70 mmHg, HF 88/min, AF 16/min, SpO2 98%, T 38,2°C", "labor": "Leukozyten 11.200/μL (leicht erhöht), Hämoglobin 12,8 g/dL (mild anämie von Blutung oder chronisch), Elektrolyte: K+ 3,2 mEq/L (LOW, Häufig mit Durchfall), Na+ 138 mEq/L (normal), Kreatinin 1,3 mg/dL (leicht erhöht von Dehydration). Stuhl: PCR für Clostridium difficile toxin A und B POSITIV!", "bildgebung": "CT Abdomen: kolitis mit wall thickening Kolon (besonders Cecum und rechts colon), keine megacolon, keine free air, keine Komplikationen.", "q": ["Diagnose?", "Ursache und Risikofaktoren?", "Management initial Clostridium difficile Infektion?", "Komplikationen und Wann OP?"], "answers": ["Clostridium difficile associated diarrhea (CDAD)/Pseudomembranöse Kolitis. Diagnose: Diarrhea nach Antibiotika, Fieber, Abdominale Krämpfe, Stuhl PCR positiv C.difficile Toxin, CT kolitis", "Ursache: Cephalosporin-Antibiotika (hoches Risiko, besonders 3./4. Generation). Risikofaktoren: Alter >65 (diesen Patient 45 aber nach OP), Antibiotika-Exposure (hier aktuell), Immunsuppression, längere Hospitalisierung", "Initial (non-fulminant): Metronidazol 500mg 4x täglich per os für 10 Tage ODER Fidaxomicin 200mg 2x täglich (bessere Resiodivrate). Discontinue auslösend Antibiotika wenn möglich. Rehydration IV, Elektrolyte-Correction (K+ supplement). Antimotility agents VERMEIDEN (erhöht megacolon-Risiko)", "Komplikationen: fulminant Kolitis mit Toxic Megacolon (Perforation-Risiko), Hypovolämischer Schock, Kolitis-Perforation mit Peritonitis. OP indiziert wenn: Perforation, fulminant Kolitis mit organ failure, nicht-Ansprechen auf Therapie >4-5 Tage. Chirurgie: meist Total Colectomy"]}, {"id": 16, "caseName": "Endokrinologie", "specialty": "Endokrinologie", "anamnese": "58-jährige weibliche Patientin mit 3 Monaten Müdigkeit, Gewichtszunahme 4 kg trotz normalem Appetit, Haarverlust, trockene Haut. Fühlt sich immer kalt (Kälteintoleranz). Langsamere Gedanken, Depression. Keine Fieber, Nachtschweiß. Menopause vor 4 Jahren. Keine neuen Medikamente.", "koerperlich": "Wirkt müde, verlangsamte Bewegungen, verlangsamt Sprechen. Haut: trocken, teigig Konsistenz (myxödem?). Haare: trocken, brüchig. Gesicht: periorbital Ödeme, grobere Gesichtszüge (möglich Myxödem?). Herzfrequenz 52/min (BRADYKARDIE!). Reflexe: verzögerte Relaxation Phase (hyporeflexia). Temperatur: 36,1°C (normal aber Patient fühlt sich kalt).", "vitale": "RR 128/82 mmHg, HF 52/min (Bradykardie!), AF 14/min (Bradypnea), SpO2 97%, T 36,1°C", "labor": "TSH 45 mIU/L (ERHÖHT massiv, normal <4,5), Free T4 0,5 ng/dL (NIEDRIG, normal 0,8-1,8), Free T3 1,8 pg/mL (niedrig-normal), Anti-TPO Antikörper 180 IU/mL (ERHÖHT, schließt Hashimoto's ein), Anti-thyroglobulin negativ. Cholesterin 265 mg/dL (erhöht von Hypothyreose)", "bildgebung": "Ultraschall Schilddrüse: diffuse hypoechogenität (konsistent mit Hashimoto's), verringerte Perfusion, keine Knoten, normale Größe", "q": ["Diagnose und Ätiologie?", "Zeichen und Symptome der Hypothyreose?", "Management und Dosierungsinitialisierung?", "Komplikationen wenn unbehandelt?"], "answers": ["Primäre Hypothyreose von Hashimoto's Thyroiditis (autoimmun). Diagnose: TSH massiv erhöht, Free T4 niedrig, Anti-TPO Antikörper positiv, Schilddrüsen-Ultraschall diffus hypoechogenität. Ätiologie: Autoimmune Zerstörung Schilddrüsen-Gewebe", "Zeichen: Bradykardie, Gewichtszunahme, Müdigkeit, Depression, Kälteintoleranz, trocken Haut/Haare, verlangsamt Sprechen/Bewegungen, verzögerte Reflexe, myxödem", "Levothyroxin Monotherapie (Free T3 normal ergo nicht kombiniert T3/T4 notwendig). Initial Dosis: ~50 μg täglich (konservativ wegen cardiac History). Titrate up 25-50 μg q4-6 Wochen basierend auf TSH. Zieldosis typisch 75-150 μg/d. Recheck TSH 6-8 Wochen nach Dosisänderung. Take on empty stomach (besser Absorption)", "Komplikationen unbehandelt: Myxödem Koma (life-threatening bei Stress/Infektion), Atherosklerose/KHK von persistierend erhöhtem Cholesterin, Infertilität, psychiatrische Störungen, Pleura/Perikard-Effusion"]}, {"id": 17, "caseName": "Neurologie", "specialty": "Neurologie", "anamnese": "68-jähriger männlicher Patient mit plötzlichem intensivem Kopfschmerz seit 2 Stunden beschrieben als 'schlimmster Kopfschmerz seines Lebens' (klassische Aussage für SAB!). Kopfschmerz war plötzlich, sofort maximale Intensität, hinterer-okzipital Region. Dazu: Nackensteife, Licht-Empfindlichkeit, Übelkeit/Erbrechen. Kurz nach Beginn: brief Episode von Verwirrung (jetzt klar). Keine Fieber zum Zeitpunkt.", "koerperlich": "Wirkt in extremem Distress, verzog Gesicht. Neurologische Untersuchung: Nackensteife DEUTLICH vorhanden (kann Kinn nicht zur Brust bringen). Brudzinski-Zeichen POSITIV (Flexion Hüfte bei Nacken-Flexion). Kernig-Zeichen: schwach positiv aber Patient kooperiert schlecht von Schmerz. Pupillen: ANISOKORIA erkennbar (rechte Pupille 4mm, links 3mm, beide reaktiv aber rechts weniger Reaktion). Augen-Bewegungen: Deficit erkennbar in rechter vertikale Blickbahn (mögliche 3. Nervus Schädigung von SAB-Kompression?). Mentale Status: jetzt klar, aber verbale Äußerungen mühsam von Kopfschmerz.", "vitale": "RR 158/92 mmHg (erhöht von Schmerz/ICP), HF 72/min (normal), AF 18/min, SpO2 96%, T 37,6°C", "labor": "Blutglukose 165 mg/dL (leicht erhöht, normal in Stress), Leukozyten 10.200/μL (normal), übrig Blut normal. CSF pending (beschrieben unten)", "bildgebung": "CT Schädel (non-contrast, sofort): Subarachnoidale Blutung sichtbar als hyperdense Strands in subarachnoidales Raum, besonders um Basalzisternen und Sylvian Fissuren. KEINE Intraparenchymal Blutung, KEINE Intraventrikular Blutung (noch), KEINE Hydrocephalus. Angiographie pending (CTA oder Katheter-Angiographie zum Identifizieren Aneurysma)", "q": ["Diagnose? Warum SAB vs. andere Ursachen?", "Hunt & Hess Klassifikation?", "Immediate Management erste 24h?", "Komplikationen und Langzeitprognose?"], "answers": ["Subarachnoidale Blutung (SAB), wahrscheinlich von Ruptur eines Hirnarterien-Aneurysmas. Diagnose: plötzlich intensiv Kopfschmerz 'schlimmster Lebens', Nackensteife, Licht-Empfindlichkeit, CT SAB mit Blut in Basalzisternen. DD: Meningitis (aber CT SAB nicht Infiltrat, keine typische Fieber), Viral Meningitis (aber CT findings). Zeichen aneurysmatische SAB: Anisokoria/3. Nerv-Palsy von Kompressionsdruck", "Hunt & Hess Grade III: moderate Symptomatologie (Nackensteife, kurz Verwirrtheit, aber neuro-Deficit minimal). Scale I (asymptomatisch) bis V (moribund). Diesen Patient Grade III", "Immediate Management (erste 24h): 1) ICU admission; 2) Neurochirurgie consult SOFORT; 3) angiographische Imaging (CTA Kopf oder Katheter-Angiographie) um Aneurysma zu lokalisieren/identifizieren; 4) Blutdruck-Management (Ziel SBP <160 um Rebleed-Risiko zu mindern, aber nicht zu aggressiv <120 um Ischämie zu vermeiden); 5) Kopf-Höhe 30 Grad; 6) Schmerztherapie (Opioid); 7) Antiemetika; 8) Stool Softener (vermeiden Strainen); 9) Überwachung neuro-Verschlechterung", "Komplikationen: Rebleeding (~20% Risiko wenn OP verzögert), Vasospasmus mit Ischämie (Tage 4-14 nach SAB, kann massive Infarkt verursachen), Hydrocephalus (von Blut in Ventrikel), Hyponatriämie (SIADH), Infektion, Epileptische Anfälle. Prognose: ~30% Mortalität unabhängig von Alter, besser wenn frühe OP. Langzeitprognose wenn überlebt: 50% haben signifikante neurologische Defizit"]}, {"id": 18, "caseName": "Chirurgie", "specialty": "Chirurgie", "anamnese": "72-jähriger männlicher Patient mit akutem Schmerz in den Beinen bilateral seit 6 Stunden, besonders in den Waden. Der Schmerz begann plötzlich in Ruhe, sehr intensiv. Bekannt arterielle Erkrankung (pAVK Stadium II mit Claudicatio intermittens seit 2 Jahren), Raucher ehemals, Diabetes, Hypertonie. Heute: Beine kalt und blass (auffallend asymmetrisch - links schlimmer als rechts).", "koerperlich": "Wirkt in extremem Distress von Schmerz. Kardiovaskulär: Herzfrequenz 102/min (Tachykardie), Blutdruck 145/88 mmHg (erhöht). Abdomen: weich, pulsatile Aorta palpabel aber Größe schwer zu schätzen (Aortan-Aneurysm-Verdacht!). Peripherale Pulse: rechte Femoralispuls schwach aber palpabel, LINKE Femoralis NICHT palpabel. Linke Unterschenkel: sehr kalt, blass/livid Hautfarbe (kritische Ischämie-Zeichen!). Motorisch: rechtes Bein kann bewegen, LINKES Bein hat Schwäche (beginnende Lähmung von Ischämie?). Sensibilität: abgestumpft links (beginnende Nervenschädigung).", "vitale": "RR 145/88 mmHg, HF 102/min, AF 18/min, SpO2 97%, T 37,1°C", "labor": "Leukozyten 9.800/μL (normal), Kreatinin 1,8 mg/dL (erhöht, baseline wahrscheinlich ~1,5), Myoglobin 450 ng/mL (erhöht - Rhabdomyolyse von Muskel-Ischämie!), CK-Muskel 2200 U/L (erhöht), Laktat 4,2 mmol/L (erhöht - Gewebshypoxie!)", "bildgebung": "CT Angiographie Abdomen/Becken dringend: Aortenthrombus oder kritische Stenose an Bifurkation (schwer zu sehen auf CT schnell), ODER bilateral Iliakalarterien-Thrombose. MR-Angiographie Beine zeigt femoralis-Occlusion links mit Aufhebung des Blutflusses unterhalb. Keine akute Dissection erkennbar.", "q": ["Diagnose? Unterschied zu Acute Arterial Dissection?", "Grad der Ischämie-Schwere?", "Immediate Management?", "Komplikationen ohne rasche Behandlung?"], "answers": ["Akute arterielle Ischämie der Beine, wahrscheinlich von thrombembolischer Okklusion (Thrombus wahrscheinlicher als Embolus gegeben pAVK Anamnese mit chronischer Erkrankung). Unterschied zu Dissection: keine Thorax-Schmerz, keine Hypertonie-Krisis, keine CT-Evidenz Dissection. Unterschied zu AAA-Ruptur: keine Bauch-Blutung-Zeichen, Vitale relativ stabil", "Grad III-IV Ischämie (Rutherford Classification): kritische Ischämie mit beginnender Lähmung und sensorischer Verlust (Zeichen von irreversiblen Gewebsschaden beginnt!). Viabilität-Fenster ist eng (~6-8 Stunden kritisch)", "IMMEDIATE: 1) Arteriale Thrombektomie oder Angioplastie-Thrombolyse DRINGEND im OR; 2) IV Heparin 100 IU/kg bolus (antikoagulation); 3) IV-Flüssigkeit (Hypovolämie-Risiko von prolongiiertem Schock, auch Rhabdomyolyse-Risiko); 4) Schmerztherapie Opioid; 5) Urin-Monitoring (Myoglobin-Färbung dunkel - braucht aggressive Flüssigkeit um ARF zu vermeiden)", "Komplikationen: Tissue Necrosis und Gangrän (irreversibel nach ~6-8h ischemia), ARF von Rhabdomyolyse (Myoglobin-Nephrototoxizität), Hyperkalämie von Zell-Lyse, Reperfusion Injury (Reoxygenation Schaden), Amputation notwendig wenn zu lange ischemia"]}, {"id": 19, "caseName": "Psychiatrie", "specialty": "Psychiatrie", "anamnese": "35-jähriger männlicher Patient mit 2 Wochen zunehmender Angst, Schlaflosigkeit, Konzentrations-Schwäche. Vor 1 Monat verlor Job nach Restrukturierung im Unternehmen. Seitdem: verstärkte Sorgen um finanzielle Zukunft, Schlafstörung (kann nicht before 3 Uhr AM einschlafen). Denkt viel über vergangene Fehler nach. Mutter hat Depression-Geschichte (Großmutter auch). Keine Suizid-Gedanken zum Zeitpunkt, leugnet Halluzinationen oder Wahnideen.", "koerperlich": "Wirkt angespannt, häufige Bewegungen (nervös fidgeting). Blickkontakt: normal. Rede: normal tempo aber etwas eilig, besorgt Ton. Gedankenconte: kohärent. Gedankenprozess: linear. Stimmung: ängstlich, besorgt. Affect: passive Angst-Ausdruck aber nicht breiter Affekt-Reduktion. Gedanken: Inhalte mit Sorgen über Job/Finanzen, aber keine Wahnideen. Sinnestäuschungen: leugnet. Fähigkeiten: normal. Urteil/Einsicht: gut.", "vitale": "RR 118/76 mmHg (normal), HF 96/min (leicht erhöht von Angst), AF 16/min, SpO2 98%, T 37,0°C", "labor": "TSH normal (schließt Hyperthyreose aus Angst-Ursache), Leukozyten/Kreatinin/Hämoglobin normal (keine körperliche Ursache)", "bildgebung": "Keine biologische Imaging notwendig. Psychologisches Assessment: Hamilton Anxiety Rating Scale (HAM-A) Score 28 (moderate bis schwere Angst). Patient denies aktuelle Drogenkonsum.", "q": ["Diagnose nach DSM-5?", "Differenzialdiagnosen von Angststörung?", "Psychotherapeutische vs. Medikamentöse Management?", "Prognose und Präventivmaßnahmen?"], "answers": ["Generalisierte Angststörung (GAD) nach DSM-5: ≥6 Monate anhaltende Angst um mehrere Lebensbereiche (Job-Sicherheit, Finanze), begleitet von Schlafstörung, Konzentrationsschwäche, Muskel-Spannung-Symptome (nervöse Unruhe). Stressor: Job-Verlust ist psychosozialer Stressor, aber Symptoms überdauern normales Reaktions-Level", "DD: Anpassungsstörung mit Angst (aber <3 Monate nach Stressor, hier 2 Wochen nach also möglich), Hyperthyreose/medizinische Ursachen (aber TSH normal), Panikstörung (aber keine diskrete Panik-Episoden), Sozialphobie (aber Angst nicht sozial-fokussiert), Substanz-Entzug (aber leugnet use)", "First-Line: Psychotherapie allein wenn mild-moderat. Hier moderate Angst + beeinträchtigte Funktion → kombinierten Ansatz: (1) Kognitiv-verhaltenstherapie (CBT) oder akzeptanz-Commitment-Therapie (ACT); (2) Medikament: SSRI (Sertralin 50-200mg/d, Paroxetine, Escitalopram) oder SNRI (Venlafaxin). Benzodiazepine (Lorazepam) nur kurzfristig wegen Abhängigkeits-Risiko", "Prognose: GAD gut behandelbar, 50% Remissionsrate mit CBT allein, 70-80% mit kombiniert Therapie. Prävention: Stressmanagement-Skills, Regelmäßige Übung, Sleep Hygiene, Limit Koffein, Familiäre Unterstützung. Arbeitsanpassung/Career-Counseling hilfreich"]}, {"id": 20, "caseName": "Gastroenterologie", "specialty": "Gastroenterologie", "anamnese": "58-jähriger männlicher Patient mit Langzeitalkoholkonsum (40-50g/Tag für 20 Jahre, jetzt quitting versucht) stellt sich vor mit Übelkeit, Erbrechen, mild Bauchschmerzen RUQ, Gelbsucht (Sclera und Haut gelb). Auch: Vergrößerung Bauch (Ascites verdacht), Verwirrtheit (leichte, aber Ehefrau sagt abnormal für ihn). Kein Fieber. Keine Hämatemesis aktuell, aber möglicherweise schwarzer Stuhl (Melena?).", "koerperlich": "Wirkt krank, mager, gelb-Färbung Sclera und Haut (Ikterie). Abdomen: vergrößert mit Fluidsein-Welle (Ascites!), Hepatomegalie fühlt sich hart and bumpig (Zirrhose?), Splenomegalie palpabel. Teleangiektasien auf Brust (vaskulär Spinnen, klassisch Zirrhose). Palma erythema (rote Handflächen, klassisch Zirrhose). Neurologisch: verlangsamt Gedanken, leichte Verwirrtheit/Asterixis-Hinweise (flapping tremor - HEPATIC ENCEPHALOPATHY Zeichen!).", "vitale": "RR 125/78 mmHg, HF 85/min, AF 16/min, SpO2 96%, T 37,3°C", "labor": "Bilirubin gesamt 8,5 mg/dL (erhöht, normal <1,2), direktes Bilirubin 5,2 mg/dL (cholestasis Muster), ALT 185 U/L (erhöht aber nicht massiv), AST 210 U/L (>ALT, klassisch Alkohol-Zirrhose), ALP 120 U/L (leicht erhöht), Albumin 2,8 g/dL (LOW, synthesize-Fehler Leber), INR 2,8 (prolonged, Koagulopathie von Synthese-Fehler), Thrombozyten 85.000/μL (niedrig, Splenomegalie/Portal Hypertension), Kreatinin 1,8 mg/dL (erhöht - mögliche hepatorenal syndrome beginning?), Glukose 75 mg/dL (niedrig, möglicherweise von Leber-Fehler)", "bildgebung": "Ultraschall Abdomen: Leber cirrhosis (heterogeneous texture, rugose surface), Ascites moderat, Splenomegalie (14 cm), Portal Vein-Durchmesser 12 mm (normal <10 mm, erhöht von Portal Hypertension). Keine HCC-Nodules erkennbar auf ultrasound. Keine Cholangitis (aber bereit für screening wegen Cholestasis-Bluttest)", "q": ["Diagnose und Schweregrad der Zirrhose?", "Komplikationen der Leberzirrhose sichtbar in diesem Fall?", "Management der hepatischen Enzephalopathie?", "Prognose und längerfristiges Management?"], "answers": ["Alkoholische Leberzirrhose mit Dekompensation. Diagnose: Langzeit-Alkoholkonsum, Zeichen Portal Hypertension (Ascites, Splenomegalie, erhöht Portal Vein-Durchmesser), Hepatische Synthese-Fehler (niedrig Albumin, prolongiert INR, niedrig Glukose), erhöhte Leberenzyme (AST>ALT pattern Alkohol), Ikterie, Zirrhose-Anzeichen (Teleangiektasien, Palma Erythema, Hepatomegalie). Child-Pugh Score: B oder C (Albumin <3,5, Bilirubin >2, INR >1,5, Ascites moderat, Enzephalopathie vorhanden)", "Komplikationen sichtbar: (1) Portal Hypertension (Ascites, Splenomegalie); (2) Hepatische Enzephalopathie (Verwirrtheit, möglich Asterixis); (3) Koagulopathie (INR erhöht); (4) mögliches hepatorenal syndrome-Beginning (Kreatinin erhöht); (5) Zirrhose allgemein", "Management Hepatische Encephalopathie: (1) Lactulose 15-30mL 2-3x/d (reduziert ammonia durch osmotische Laxation); (2) Rifaxomycin oder Neomycin-Antibiotika (reduziert ammonia-produzierende Bakterien); (3) Protein-Restriktion (initial, aber nicht Langzeit); (4) Discontinue Alkohol ABSOLUT; (5) Identifizieren Trigger (Blutung?, Infektion?, Elektrolyte-Imbalance?)", "Prognose: Child-Pugh B/C Zirrhose hat 5-Jahres-Überlebensrate ~30-50%. Mit Enzephalopathie schlechter. ZIEL: Leber-Transplant evaluation (wenn <65 und sonst gesund). Längerfristiger Management: (1) Leber-Transplant-Liste wenn elegible; (2) Varizen-Screening und Prophylaxe (Propranolol oder Varizenligation); (3) Diuretika für Ascites (Spironolacton); (4) Albumin-Infusion bei Paracentesis; (5) Prophylaxe SBP wenn Ascites mit niedrig Protein (<1g/dL); (6) ABSOLUT Alkohol-Abstinenz und psychologische Unterstützung/Addiction-Beratung"]}];
+
+        let currentMode = 'single';
+        let currentCaseIndex = 0;
+        let progress = {};
+
+        function initApp() {
+            loadProgress();
+            displayCase();
+            updateStats();
+        }
+
+        function displayCase() {
+            if (allCases.length === 0) return;
+
+            const caseIndex = currentMode === 'single' ? currentCaseIndex : Math.floor(Math.random() * allCases.length);
+            const caseData = allCases[caseIndex];
+
+            let html = `
+                <div class="case-layout">
+                    <div class="case-column">
+                        <div class="case-header">
+                            <div class="case-title">${caseData.specialty}</div>
+                            <div class="case-meta">Fall ${caseData.id} | ${caseData.specialty}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">📋 Anamnese</div>
+                            <div class="section-content">${caseData.anamnese}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">🔍 Körperliche Untersuchung</div>
+                            <div class="section-content">${caseData.koerperlich}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">📊 Vitale Zeichen</div>
+                            <div class="section-content">${caseData.vitale}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">🧪 Laborergebnisse</div>
+                            <div class="section-content">${caseData.labor}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">🖼️ Bildgebung & EKG</div>
+                            <div class="section-content">${caseData.bildgebung}</div>
+                        </div>
+                    </div>
+
+                    <div class="questions-column">
+                        <div class="questions-section">
+                            <h3>❓ Fragen</h3>
+                            ${caseData.q.map((q, idx) => `
+                                <div class="question-block">
+                                    <div class="question-text">Frage ${idx + 1}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">${q}</div>
+                                    <textarea id="answer_${idx}" placeholder="Antwort..."></textarea>
+                                </div>
+                            `).join('')}
+
+                            <div class="button-group">
+                                <button class="btn btn-success" onclick="submitAnswers(${caseData.id})">✓ Einreichen</button>
+                                <button class="btn" onclick="nextCase()">→ Nächster</button>
+                            </div>
+
+                            <div id="ratingSection_${caseData.id}" class="rating-section">
+                                <div class="rating-title">Selbstbewertung:</div>
+                                <div class="rating-buttons">
+                                    <button class="btn btn-success" onclick="rateAnswers(${caseData.id}, 'correct')">✓ Korrekt</button>
+                                    <button class="btn btn-warning" onclick="rateAnswers(${caseData.id}, 'sufficient')">~ Ausreichend</button>
+                                    <button class="btn btn-danger" onclick="rateAnswers(${caseData.id}, 'incorrect')">✗ Falsch</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('caseContainer').innerHTML = html;
+        }
+
+        function submitAnswers(caseId) {
+            const ratingSection = document.getElementById(`ratingSection_${caseId}`);
+            if (ratingSection) ratingSection.classList.add('show');
+        }
+
+        function rateAnswers(caseId, rating) {
+            progress[caseId] = rating;
+            saveProgress();
+            updateStats();
+            showFeedback(caseId);
+            setTimeout(nextCase, 2000);
+        }
+
+        function showFeedback(caseId) {
+            const caseData = allCases.find(c => c.id === caseId);
+            if (!caseData) return;
+
+            let feedbackHTML = `<div class="feedback-header">💡 Musterlösungen</div>`;
+            caseData.q.forEach((q, idx) => {
+                feedbackHTML += `
+                    <div class="feedback-item">
+                        <div class="feedback-q-text">Frage ${idx + 1}: ${q}</div>
+                        <div class="solution-answer">${caseData.answers[idx]}</div>
+                    </div>
+                `;
+            });
+
+            const feedbackContainer = document.getElementById('feedback');
+            feedbackContainer.innerHTML = feedbackHTML;
+            feedbackContainer.classList.add('show');
+            feedbackContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function nextCase() {
+            currentCaseIndex = (currentCaseIndex + 1) % allCases.length;
+            document.getElementById('feedback').classList.remove('show');
+            displayCase();
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            currentCaseIndex = 0;
+            document.querySelectorAll('.mode-selector .btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            displayCase();
+        }
+
+        function updateStats() {
+            const completed = Object.keys(progress).length;
+            const total = allCases.length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('progressPct').textContent = percentage + '%';
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+
+        function saveProgress() {
+            localStorage.setItem('kp_progress', JSON.stringify(progress));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('kp_progress');
+            progress = saved ? JSON.parse(saved) : {};
+        }
+
+        function exportProgress() {
+            const dataStr = JSON.stringify(progress, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'kp_progress_' + new Date().getTime() + '.json';
+            link.click();
+        }
+
+        function importProgress() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        progress = JSON.parse(event.target.result);
+                        saveProgress();
+                        updateStats();
+                        alert('Fortschritt importiert!');
+                    } catch (err) {
+                        alert('Fehler beim Importieren');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function resetProgress() {
+            if (confirm('Alle Fortschritte löschen?')) {
+                progress = {};
+                localStorage.removeItem('kp_progress');
+                updateStats();
+                displayCase();
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
