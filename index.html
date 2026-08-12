@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KP Simulator - Prüfungskommission</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+        }
+
+        .header h1 { font-size: 28px; color: var(--primary); }
+        .header p { font-size: 13px; color: var(--text-secondary); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .stat-progress { font-size: 11px; color: var(--text-secondary); margin-top: 5px; }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.3s ease;
+        }
+
+        .specialty-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .specialty-btn {
+            padding: 12px;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .specialty-btn:hover { border-color: var(--primary); }
+        .specialty-btn.active { background: var(--primary); border-color: var(--primary); }
+
+        .theme-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            padding: 8px 15px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .theme-btn:hover { border-color: var(--primary); }
+        .theme-btn.active { background: var(--success); border-color: var(--success); }
+
+        .question-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .question-number {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-dark);
+            padding: 4px 8px;
+            border-radius: 3px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .question-text {
+            font-weight: bold;
+            color: var(--primary);
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+
+        .btn-small:hover { background: var(--border); }
+        .btn-check { background: var(--success); border-color: var(--success); }
+        .btn-show { background: var(--primary); border-color: var(--primary); }
+
+        .answer-box {
+            display: none;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid var(--success);
+        }
+
+        .answer-box.show { display: block; }
+
+        .answer-title {
+            font-weight: bold;
+            color: var(--success);
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .answer-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .rating-section {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-rating {
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-rating:hover { background: var(--border); }
+        .btn-rating.correct { background: var(--success); color: white; border-color: var(--success); }
+        .btn-rating.sufficient { background: var(--warning); color: #000; border-color: var(--warning); }
+        .btn-rating.incorrect { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .stats-by-specialty {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .specialty-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .specialty-name { font-weight: bold; color: var(--primary); font-size: 13px; margin-bottom: 8px; }
+        .specialty-progress { display: flex; align-items: center; gap: 10px; }
+        .progress-number { font-weight: bold; color: var(--success); }
+        .progress-bar-small {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-bar-small-fill {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .specialty-selector { grid-template-columns: repeat(2, 1fr); }
+            .question-header { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 KP Simulator - Fragen-Training</h1>
+            <p>Organisiert nach Spezialität und medizinischem Thema</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Gesamt Fragen</div>
+                <div class="stat-value" id="totalQuestions">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Beantwortet</div>
+                <div class="stat-value" id="answeredQuestions">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Korrekt</div>
+                <div class="stat-value" id="correctAnswers">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Gesamtfortschritt</div>
+                <div class="stat-value" id="overallProgress">0%</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="color: var(--primary); margin: 20px 0 15px;">Wählen Sie eine Spezialität:</h3>
+        <div class="specialty-selector" id="specialtySelector"></div>
+
+        <div id="themeContainer" style="display: none;">
+            <h3 style="color: var(--primary); margin: 20px 0 15px;">Themen in dieser Spezialität:</h3>
+            <div class="theme-selector" id="themeSelector"></div>
+        </div>
+
+        <div id="questionsContainer"></div>
+
+        <div class="stats-by-specialty" id="specialtyStats"></div>
+    </div>
+
+    <script>
+        // Daten: Spezialitäten mit Themen und Fragen
+        const data = {
+            "Gastroenterologie": {
+                "Divertikulitis": [
+                    {q: "Ein 62-jähriger Patient stellt sich mit 3 Tagen Unterbauchschmerz links und Fieber 38,2°C vor. CT zeigt entzündetes Divertikel in Sigmoid mit lokalem Fett-Stranding, KEINE freie Luft. Welche Hinchey-Klassifikation, Differenzialdiagnosen und therapeutisches Vorgehen sind indiziert?", a: "Hinchey Grad I (lokalisiert, keine Perforation). DD: Appendizitis (rechts), Kolonkarzinom, Morbus Crohn, Ovarialpathologien. Management: Grade I unkompliziert → konservativ (NPO, IV-Flüssigkeit, AB: Metronidazol+Cephalosporin 10-14 Tage). Nach 4-6 Wochen elektive Sigmaresektion bei recurrent."},
+                    {q: "Unterscheiden Sie zwischen unkomplizierter und komplizierter Diverticulitis. Welche Komplikationen entstehen und wie unterscheidet sich das Management?", a: "Unkompliziert (Grad I): lokale Entzündung, konservativ möglich. Kompliziert: Perforation (frei oder gedeckt→Abscess), Fistel, Stenose/Ileus. Perforation mit Peritonitis→Notfall-OP (Hartmann-Op oder Resektion+Anastomose). Abscess→CT-Drainage oder OP."},
+                    {q: "Ein Patient mit 3. Diverticulitis-Episode fragt: 'Muss ich mich operieren lassen?' Besprechen Sie Indikationen für elektive Sigmaresektion basierend auf Rezidiv-Risiken.", a: "Nach 1. Episode: nicht routinemäßig (nur 20% Rezidiv). Nach 2. Episode: Rezidiv-Risiko 35%. Nach 3. Episode: elektive Sigmaresektion EMPFOHLEN. Timing: 4-6 Wochen nach akuter Phase."},
+                    {q: "Warum ist Metronidazol bei Diverticulitis essentiell? Erklären Sie die Mikrobiologie des Dickdarms und alternative Antibiotikaregimen.", a: "Metronidazol wirkt gegen Anaerobier (Bacteroides fragilis). Dickdarm: ~1000:1 anaerob:aerob. Kombinationen: Metronidazol+Cephalosporin ODER Piperacillin/Tazobactam. Dauer: 10-14 Tage."}
+                ],
+                "Cholezystitis": [
+                    {q: "Eine 35-jährige Frau mit RUQ-Schmerz, Murphy-Zeichen positiv, Ultraschall: Gallensteine, verdickte Gallenblasenwand. Klassifizieren Sie die Cholezystitis, Komplikationen und Management mit OP-Timing.", a: "Akute unkomplizierte Cholezystitis. Komplikationen: Perforation, biliäre Pankreatitis, Cholangitis, emphysematöse Cholezystitis. Management: NPO, IV-Flüssigkeit, AB (Ceftriaxon+Metronidazol), Cholezystektomie zeitnah (<72h)."},
+                    {q: "Unterscheiden Sie zwischen akuter Cholezystitis von Gallensteinen vs. akalkulous Cholecystitis. Pathophysiologie und Management unterschied?", a: "Calculous (90%): Gallensteine obstruieren Cystic Duct. Acalculous (10%): keine Steine, Krise von Stase/Infekt/Ischämie. Acalculous: höhere Komplikation-Rate (10%), höhere Mortalität. Management: frühe Intervention notwendig."},
+                    {q: "Ein 78-jähriger mit Diabetes und Emphysematöse Cholecystitis. Was ist die Pathophysiologie? Welche Organismen? Management? Prognose?", a: "Emphysematöse: typisch bei älter/Diabetiker, Gasbildner-Bakterien. Pathophysiologie: Gasbildung von Nekrose und Infektion. NOTFALL-OP sofort (nicht konservativ!). Mortalität bis 15-40%."}
+                ],
+                "Ulcus_Ventriculi": [
+                    {q: "Ein 68-jähriger mit 15 Jahren NSAR-Gebrauch stellt sich mit massivem epigastrischem Schmerz, Bretbauch, Schock vor. Diagnose? Pathophysiologie? Sofortmanagement?", a: "Perforiertes Magengeschwür. NSAR inhibiert COX → reduzierte Magenschleimhaut-Schutz. NOTFALL-OP: Vierschichtnaht+Omentoplastie. Prognose: ~10% Mortalität OP vs. 40-50% wenn >24h verzögert."},
+                    {q: "Vergleichen Sie PPI-resistentes Ulkus mit Zollinger-Ellison-Syndrom (ZES). Diagnostische Tests?", a: "PPI-resistentes Ulkus: trotz Hochdosis-PPI kein Heilen. ZES: Basale Gastrin >1000 pg/mL. Management ZES: höhere PPI-Dosen, chirurgisch wenn notwendig (früher Gastrektomie)."},
+                    {q: "H.pylori-positive Ulcuskrankheit: Triple-Therapie, Resistenzmuster, Therapie-Versagen.", a: "Standard Triple: PPI + Amoxicillin + Clarithromycin für 10-14 Tage (85-90% Erfolgsvrate). Clarithromycin-Resistenz häufig. Zweite Linie: Quadruple-Therapie (95% Erfolgsvrate)."}
+                ],
+                "Magenkarzinom": [
+                    {q: "Ein 52-jähriger mit progressive Dysphagie, 8kg Gewichtsverlust in 3 Monaten, Raucher, Alkohol. Wahrscheinliche Diagnose? Staging? Therapeutische Optionen?", a: "Magenkarzinom. Risikofaktoren: Rauchen, Alkohol, H.pylori. Management: Neoadjuvante Chemoradiotherapie dann Gastrektomie (wenn resectable), oder palliative Chemotherapie. Prognose: 5-Jahres-Überlebensrate ~20%."}
+                ],
+                "Gastritis": [
+                    {q: "Klassifizieren Sie Gastritis-Typen nach Pathophysiologie (Typ A, B, C). Assoziationen und Langzeitfolgen?", a: "Typ A (autoimmun): gegen Parietalzellen → B12-Mangel. Typ B (H.pylori, 85%): Ulkusrisiko → Magenkarzinom-Risiko. Typ C (chemisch): Reflux, NSAR, Alkohol. Management: H.pylori-Eradikation, PPI, Noxen-Vermeidung."}
+                ]
+            },
+            "Kardiologie": {
+                "KHK": [
+                    {q: "Ein 65-jähriger mit Hypertonie, Diabetes, Raucher: klassische Belastungs-Angina (3 Min, Nitroglycerin-responsiv). EKG: ST-Senkung. Diagnose? Pathophysiologie? Diagnostic Workup? Management?", a: "Stabile Angina Pectoris. Pathophysiologie: Koronararterien-Stenose (>70%) mit O2-Demand-Ischämie. Workup: Stress-Test, SPECT, CT-Angiographie. Management: Beta-Blocker, ACE-inhibitor, Statin, Aspirin, NTG. Revaskularisierung wenn ≥2-Gefäß-Stenose."},
+                    {q: "Unterschied stabile Angina, instabile Angina, NSTEMI? EKG, Troponin, Management unterschied?", a: "Stabile: vorhersehbar, Troponin normal. Instabile: neue/progressive, trotz NTG persistiert, Troponin NORMAL. NSTEMI: wie instabile aber Troponin ERHÖHT. Management: instabile/NSTEMI→Dual-Antiplatelet, Heparin, Koronare Angiographie."},
+                    {q: "Patient mit stabiler KHK erhält PCI mit DES. DAPT-Dauer? Blutungs- vs. Ischämie-Risiko? Perioperatives Management?", a: "Standard DAPT: 12 Monate. Kurze DAPT (6 Monate) möglich bei hohem Blutungsrisiko. Perioperativ: Aspirin weitergeben, P2Y12i minimale Unterbrechung (<5-7 Tage)."}
+                ],
+                "Angina_Pectoris": [
+                    {q: "Unterscheiden Sie typische Angina, atypische Angina, Non-cardiac chest pain. Charakteristika und Risikofaktoren?", a: "Typische Angina: Druck, Ausstrahlung, Minuten-Dauer, Belastungs-auslösbar, NTG-responsiv. Atypische: nur 2 von 3 Kriterien. Non-cardiac: keine Features. Women präsentieren oft atypischer."},
+                    {q: "Mikro-Angina (Mikrovascular Angina): Pathophysiologie, Präsentation, unterschied zu Makro-Gefäß-KHK, Diagnostik, Management.", a: "Mikro-Angina: kleine Koronargefäße zeigen Dysfunktion. Präsentation: Angina-ähnlich aber normale Koronare Angiographie. Management: Beta-Blocker, Calciumantagonisten, ACE-inhibitor, Ranolazin."}
+                ],
+                "Herzinsuffizienz": [
+                    {q: "Ein 68-jähriger mit bekannter KHK: progressive Dyspnoe, Orthopnoe, Ödeme, S3-Gallop, BNP 520, Q-Zacken anterior. Klassifizierung? Therapeutisches Vorgehen akut?", a: "HFrEF, NYHA IV, ACC-AHA Stage D. Akute Management: O2, IV-Furosemid, Nitroglycerin, Echokardiographie, Koronare Angiographie. Dauer: ACE-inhibitor+Betablocker+MRA+SGLT2i, ICD wenn notwendig."},
+                    {q: "Akute dekompenzierte HI vs. AKS vs. Lungenembolie: Unterscheidung, EKG, Marker, Bildgebung, Management unterschied?", a: "HI: Orthopnoe, Rasselgeräusche, BNP erhöht, normal Troponin. AKS: Brustschmerz, Troponin ERHÖHT. PE: Dyspnoe, hohes D-Dimer, CT-PE zeigt Embolus. Management je nach Diagnose."},
+                    {q: "HFrEF 4-Säulen-Therapie: ACE-i/ARB/ARNI, Betablocker, MRA, SGLT2i. Dosierung, Titration, Monitoring, Kontraindikationen, Nebenwirkungen.", a: "ACE-i: Enalapril 10mg 2x/d; Beta-Blocker: Carvedilol 25mg 2x/d; MRA: Spironolacton 25-50mg/d (Kalium↑!); SGLT2i: Empagliflozin 10mg/d. Monitor: Kreatinin, Kalium. Titrate successiv."}
+                ],
+                "Vorhofflimmern": [
+                    {q: "71-jährige mit VHF-RVR (HF 135), BP 145/88, SpO2 95%, hemodynamisch stabil. Frequenzkontrolle vs. Rhythmuskontrolle? CHA2DS2-VASc? Antikoagulation? Initial-Management?", a: "Hemodynamisch stabil→Frequenzkontrolle bevorzugt. CHA2DS2-VASc=3→ANTIKOAGULATION INDIZIERT (DOAC/Warfarin). Beta-Blocker (Metoprolol) oder Kalziumantagonist. Ziel HR <110."},
+                    {q: "Hemodynamisch instabiles VHF (Hypotension, Synkope): wann sofortige Kardioversion? Sedierung, Technik, Komplikationen?", a: "Instabiles VHF→sofortige Kardioversion. Sedierung: Propofol oder Etomidat. Technik: synchronisiert biphasisch (100-200J initial). Komplikationen: Refibrillation, Hypotonie, Myokardial Stunning."},
+                    {q: "VHF-Stroke-Risiko CHA2DS2-VASc Score: Berechnung, Antikoagulations-Schwellwert, Männer vs. Frauen, HAS-BLED für Blutungsrisiko.", a: "CHA2DS2-VASc: Männer Score ≥1→Antikoagulation, Frauen Score ≥2. HAS-BLED: Score ≥3→hohes Blutungsrisiko, aber NICHT Kontraindikation (Schlag-Risiko>Blutung)."}
+                ],
+                "Akutes_Koronarsyndrom": [
+                    {q: "STEMI anterior (ST-Hebung V1-V4): LAD-Okklusion. Pathophysiologie, Komplikationen, Reperfusions-Management, Timing kritisch?", a: "LAD: Vorderwand+Septum. Komplikationen: Schock, VF, AV-Block, Papillär-Muskeln-Ruptur. Primäre PCI <90min (door-to-balloon KRITISCH). Wenn >120min→Thrombolyse."},
+                    {q: "NSTEMI: Diagnose vs. instabile Angina. Troponin-Kinetik, Risk-Stratifikation (HEART, TIMI), Wann invasive Angiographie?", a: "NSTEMI: Troponin ≥99 Perzentile. HEART/TIMI Score für Risiko. NSTEMI→frühe Angiographie (<24h) bevorzugt. Management: Dual-Antiplatelet, Heparin, Ischämie-Therapie."}
+                ]
+            },
+            "Neurologie": {
+                "Schlaganfall": [
+                    {q: "74-jähriger mit VHF nicht antikoaguliert: rechtsseitige Armparese, Sprachstörung vor 90 min (IM ZEITFENSTER). NIHSS 8, CT keine Blutung. Diagnose? rtPA-Eignung? TOAST? Dosierung?", a: "Akuter ischämischer Schlaganfall (Cardioembolic). IM ZEITFENSTER→rtPA indiziert. TOAST: Cardioembolisch. Dosierung: 0,9mg/kg IV (bolus 10% über 1min, Rest 60min). Monitoring: Neuro q30min, Repeat CT 24h."},
+                    {q: "Schlaganfall-Komplikationen 24-48h: Blutungstransformation, Hirnödem/Herniation, Anfälle, Dysphagie. Monitoring, Prophylaxe, Management?", a: "Blutungstransformation: 2-6% nach rtPA. Hirnödem: größer Infarkt→Herniation-Risiko→osmotische Therapie/Hemicraniektomie. Anfälle: 2-3% akut, keine Prophylaxe routin. Dysphagie→Aspirations-Risiko."},
+                    {q: "Langzeitprognose und Sekundärprävention nach ischämischer Stroke. Risikofaktoren-Modifikation, Antiplatelet vs. Antikoagulation, Statine, Rehabilitation.", a: "Sekundärprävention: RR<140/90, Raucher-Entwöhnung, Diabetesk-Kontrolle. Antiplatelet: ASS/Clopidogrel. Antikoagulation: wenn Cardioembolic (DOAC ab 24h nach rtPA). Statine: Atorvastatin 80mg. Rehabilitation sofort."}
+                ]
+            },
+            "Urologie": {
+                "Nephrolitiasis": [
+                    {q: "45-jähriger mit kolikatiger Flanken-Schmerz, Erythrozyturie, CT: 8mm Stein in linkem UPJ. Management? Spontane Passage-Chance? Interventions-Indikationen?", a: "8mm Stein: 50% spontane Passage. Management: Schmerztherapie (NSAR/Opioid), Rehydration. Intervention (Lithotripsie/Ureteroskopie) wenn: Symptom-Kontrolle schlecht, Infekt, ARF. Erfolg >90%."},
+                    {q: "Komplikationen Nephrolitiasis: Urosepsis, ARF, obstruktive Pyelonephritis. Wann dringende Intervention (Stent/Nephrostomie)? Infected obstructed Management?", a: "Infected obstructed = NOTFALL! SOFORT Entlastung (Stent/PNC), AB (Ceftriaxon+Gentamicin), Flüssigkeit+Vasopressor. Timing: STUNDE nicht TAGE! Verzögerung→Sepsis→Mortalität 50%."},
+                    {q: "Medikamentöse Steinprävention: Hydration, Diuretika, Alkalisierung, Allopurinol. Interventionen je Steintyp?", a: "Hydration: >2L/Tag. Thiazide: reduziert Kalzium-Urin. Citrat: alkalinisiert (hilft Urate/Cystin). Allopurinol: für Urate-Steine. Kalzium-Steine→Thiazide+Diät. Rezidiv-Risiko 50% ohne Prophylaxe."}
+                ]
+            },
+            "Innere_Medizin": {
+                "Diabetes_Mellitus": [
+                    {q: "58-jähriger mit HbA1c 9,2% (schlecht kontrolliert), progressive distale sensory Polyneuropathie. Diagnose? Pathophysiologie? Management? Prognose?", a: "Diabetes Typ 2 mit diabetische Polyneuropathie. Pathophysiologie: Hyperglykämie→AGE→Nervenschädigung. Management: GLYKÄMISCHE KONTROLLE PRIMARY, Gabapentin/Pregabalin, Fuß-Care, B12-Supplement. Prognose: mit Kontrolle stabilisieren möglich."},
+                    {q: "DKA vs. HHS: unterschied Pathophysiologie, Klinik, Laborbefunde, Management, Mortalität?", a: "DKA: Insulinmangel→Ketone↑→Azidose (pH<7,3). Kussmaul, schnell Progression. HHS: Typ 2, Glucose >600, keine Ketone, Dehydration massive. Management: aggressive Flüssigkeit, Insulin. Mortalität DKA ~1-5%, HHS ~5-15%."},
+                    {q: "SGLT2i-Inhibitoren und euglykämische DKA: Pathophysiologie, diagnostische Herausforderung, Management, Prävention?", a: "SGLT2i→erhöhte Glukose-Ausscheidung→normal/mild Glucose ABER Ketone↑ (euglykämische DKA!). Herausforderung: nicht erkannt! Diagnostik: pH, Bicarbonat, Ketone messen. Prävention: pausieren SGLT2i bei akuten Erkrankung."}
+                ],
+                "PAVK": [
+                    {q: "62-jähriger Raucher mit Claudicatio intermittens (100m Gehstrecke), ABI 0,7 links. Fontaine-Stadium? Diagnostik? Management konservativ vs. interventionell?", a: "Fontaine Stadium II. ABI 0,7 = leichte-mittlere Stenose. Diagnostik: Doppler, CT/MR-Angiographie. Management konservativ: Raucher-Entwöhnung, Gehtraining, ASS, Statin, ACE-inhibitor. Intervention: wenn funktionelle Behinderung."},
+                    {q: "Kritische Extremitäten-Ischämie (Fontaine IV): Zeichen, Komplikationen, Amputation-Indikationen, palliatives Management?", a: "Ruheschmerz, Gewebs-Nekrose, Ulcus/Gangrän. Komplikationen: Gas-Gangrän (lebensbedrohlich), Osteomyelitis, Sepsis. Amputation wenn: nicht-viability, massive Infektion, Gewebs-Verlust >50%. Prognose ohne Intervention: 50% Überleben 6-12 Monate."}
+                ],
+                "Pneumonie": [
+                    {q: "Ambulant-erworbene Pneumonie 48-jähriger: Husten mit Auswurf, Fieber 38,5°C, Infiltrat rechts basal. Organismen? CURB-65/PSI Score? Antibiotika-Regime?", a: "CAP-Organismen: S.pneumoniae, H.influenzae, Viren, atypisch. CURB-65: Score 0-1=ambulant, 2=Spital, 3-5=schwer. AB: Amoxicillin-Clavulanat (mild) oder Ceftriaxon+Azithromycin (moderat). Dauer: 5-7 Tage."},
+                    {q: "Nosokomiale (HAP) vs. Ventilator-assoziierte Pneumonie (VAP): Risikofaktoren, Organismen (MDR), Diagnostik, empirische Antibiotika?", a: "HAP: >48h Spitalsaufnahme. VAP: >48h Intubation. Organismen: P.aeruginosa, Acinetobacter, MRSA. Diagnostik: Tracheal-Aspirat/BAL mit Kultur. AB: Antipseudomonas (Ceftazidim/Piperacillin-Tazobactam) +/- MRSA-Abdeckung. Mortalität ~30-50%."}
+                ]
+            }
+        };
+
+        let currentSpecialty = null;
+        let currentTheme = null;
+        let answered = {};
+
+        function init() {
+            const specialties = Object.keys(data);
+            const selector = document.getElementById('specialtySelector');
+
+            specialties.forEach(spec => {
+                const btn = document.createElement('button');
+                btn.className = 'specialty-btn';
+                btn.textContent = spec;
+                btn.onclick = () => selectSpecialty(spec);
+                selector.appendChild(btn);
+            });
+
+            updateStats();
+        }
+
+        function selectSpecialty(specialty) {
+            currentSpecialty = specialty;
+            currentTheme = null;
+
+            document.querySelectorAll('.specialty-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const selector = document.getElementById('themeSelector');
+            selector.innerHTML = '';
+            const themes = Object.keys(data[specialty]);
+            themes.forEach(theme => {
+                const btn = document.createElement('button');
+                btn.className = 'theme-btn';
+                btn.textContent = theme;
+                btn.onclick = () => selectTheme(theme);
+                selector.appendChild(btn);
+            });
+
+            document.getElementById('themeContainer').style.display = 'block';
+            document.getElementById('questionsContainer').innerHTML = '';
+        }
+
+        function selectTheme(theme) {
+            currentTheme = theme;
+
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            displayQuestions();
+        }
+
+        function displayQuestions() {
+            const questions = data[currentSpecialty][currentTheme];
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((qa, idx) => {
+                const qNum = idx + 1;
+                const div = document.createElement('div');
+                div.className = 'question-container';
+                div.id = `q-${currentSpecialty}-${currentTheme}-${idx}`;
+
+                const rating = answered[`${currentSpecialty}-${currentTheme}-${idx}`] || null;
+
+                div.innerHTML = `
+                    <div class="question-header">
+                        <span class="question-number">Frage ${qNum}</span>
+                        <span class="question-text">${qa.q}</span>
+                        <div class="question-actions">
+                            <button class="btn-small btn-show" onclick="toggleAnswer('${currentSpecialty}', '${currentTheme}', ${idx})">Antwort</button>
+                        </div>
+                    </div>
+                    <div class="answer-box" id="answer-${currentSpecialty}-${currentTheme}-${idx}">
+                        <div class="answer-title">✓ Musterlösung:</div>
+                        <div class="answer-text">${qa.a}</div>
+                    </div>
+                    <div class="rating-section">
+                        <button class="btn-rating ${rating === 'correct' ? 'correct' : ''}" onclick="rateQuestion('${currentSpecialty}', '${currentTheme}', ${idx}, 'correct')">✓ Korrekt</button>
+                        <button class="btn-rating ${rating === 'sufficient' ? 'sufficient' : ''}" onclick="rateQuestion('${currentSpecialty}', '${currentTheme}', ${idx}, 'sufficient')">~ Ausreichend</button>
+                        <button class="btn-rating ${rating === 'incorrect' ? 'incorrect' : ''}" onclick="rateQuestion('${currentSpecialty}', '${currentTheme}', ${idx}, 'incorrect')">✗ Falsch</button>
+                    </div>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        function toggleAnswer(spec, theme, idx) {
+            const box = document.getElementById(`answer-${spec}-${theme}-${idx}`);
+            box.classList.toggle('show');
+        }
+
+        function rateQuestion(spec, theme, idx, rating) {
+            const key = `${spec}-${theme}-${idx}`;
+            answered[key] = rating;
+            localStorage.setItem('kp_answered', JSON.stringify(answered));
+            updateStats();
+            displayQuestions();
+        }
+
+        function updateStats() {
+            const allQuestions = Object.values(data).reduce((acc, themes) =>
+                acc + Object.values(themes).reduce((sum, qs) => sum + qs.length, 0), 0);
+
+            const answeredCount = Object.keys(answered).length;
+            const correctCount = Object.values(answered).filter(v => v === 'correct').length;
+
+            document.getElementById('totalQuestions').textContent = allQuestions;
+            document.getElementById('answeredQuestions').textContent = answeredCount;
+            document.getElementById('correctAnswers').textContent = correctCount;
+
+            const percentage = allQuestions > 0 ? Math.round((answeredCount / allQuestions) * 100) : 0;
+            document.getElementById('overallProgress').textContent = percentage + '%';
+            document.getElementById('progressFill').style.width = percentage + '%';
+
+            // Especialidades Stats
+            const statsDiv = document.getElementById('specialtyStats');
+            statsDiv.innerHTML = '';
+
+            Object.keys(data).forEach(spec => {
+                const specQuestions = Object.values(data[spec]).reduce((sum, qs) => sum + qs.length, 0);
+                const specAnswered = Object.keys(answered)
+                    .filter(k => k.startsWith(spec))
+                    .length;
+
+                const div = document.createElement('div');
+                div.className = 'specialty-stat';
+                div.innerHTML = `
+                    <div class="specialty-name">${spec}</div>
+                    <div class="specialty-progress">
+                        <span class="progress-number">${specAnswered}/${specQuestions}</span>
+                        <div class="progress-bar-small">
+                            <div class="progress-bar-small-fill" style="width: ${specQuestions > 0 ? (specAnswered/specQuestions)*100 : 0}%"></div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                statsDiv.appendChild(div);
+            });
+        }
+
+        // Loaded saved progress
+        const saved = localStorage.getItem('kp_answered');
+        if (saved) answered = JSON.parse(saved);
+
+        init();
+    </script>
+</body>
+</html>
