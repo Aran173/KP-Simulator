@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KP Simulator - Prüfungskommission</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 { font-size: 28px; margin-bottom: 5px; color: var(--primary); }
+        .header p { font-size: 13px; color: var(--text-secondary); }
+
+        .header-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 6px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-value { font-size: 20px; font-weight: bold; color: var(--primary); display: block; }
+        .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+        .progress-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { background: var(--border); border-color: var(--primary); }
+        .btn.active { background: var(--primary); border-color: var(--primary); }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-success { background: var(--success); border-color: var(--success); }
+        .btn-warning { background: var(--warning); border-color: var(--warning); color: #000; }
+        .btn-danger { background: var(--danger); border-color: var(--danger); }
+
+        .export-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .export-section h3 { color: var(--primary); margin-bottom: 15px; }
+        .export-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* LAYOUT: DOS COLUMNAS */
+        .case-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* IZQUIERDA: CASO */
+        .case-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .case-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .case-title { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
+        .case-meta { font-size: 12px; color: var(--text-secondary); }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .section-title { font-weight: bold; color: var(--primary); margin-bottom: 8px; font-size: 13px; }
+        .section-content { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+
+        /* DERECHA: PREGUNTAS */
+        .questions-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .questions-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            border-left: 4px solid var(--success);
+        }
+
+        .questions-section h3 { color: var(--success); margin-bottom: 15px; font-size: 16px; }
+
+        .question-block { margin-bottom: 18px; }
+        .question-text { font-weight: bold; color: var(--primary); margin-bottom: 6px; font-size: 13px; }
+
+        textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+
+        .button-group { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .button-group .btn { flex: 1; min-width: 100px; font-size: 13px; }
+
+        .rating-section { display: none; margin-top: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .rating-section.show { display: block; }
+        .rating-title { font-weight: bold; color: var(--success); margin-bottom: 12px; font-size: 14px; }
+        .rating-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .rating-buttons .btn { flex: 1; min-width: 90px; }
+
+        #feedback { display: none; grid-column: 1 / -1; margin-top: 20px; }
+        #feedback.show { display: block; }
+
+        .feedback-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        .feedback-item { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .feedback-q-text { color: var(--primary); font-weight: bold; margin-bottom: 8px; }
+        .solution-answer { color: var(--text-secondary); font-size: 13px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 4px; border-left: 3px solid var(--success); margin-top: 8px; }
+
+        @media (max-width: 1100px) {
+            .case-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🏥 KP Simulator</h1>
+                <p>Prüfungskommission - Medical Exam Practice</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="completedCount">0</span>
+                    <span class="stat-label">Erledigt</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="totalCount">0</span>
+                    <span class="stat-label">Gesamt</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="progressPct">0%</span>
+                    <span class="stat-label">Fortschritt</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div style="font-size: 12px; color: var(--text-secondary);">Gesamtfortschritt</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>📊 Fortschritt verwalten</h3>
+            <div class="export-buttons">
+                <button class="btn btn-primary" onclick="exportProgress()">📥 Exportieren</button>
+                <button class="btn btn-primary" onclick="importProgress()">📤 Importieren</button>
+                <button class="btn btn-warning" onclick="resetProgress()">🔄 Zurücksetzen</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 12px;">Modus wählen:</h3>
+            <div class="mode-selector">
+                <button class="btn btn-primary active" onclick="switchMode('single')">Einzelfall</button>
+                <button class="btn" onclick="switchMode('practice')">Trainingsmode</button>
+                <button class="btn" onclick="switchMode('all')">Alle durchgehen</button>
+            </div>
+        </div>
+
+        <div id="caseContainer"></div>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        const allCases = [
+            {"id":1,"caseName":"Chirurgie","specialty":"Chirurgie","anamnese":"62-jährige Patientin mit 2-3 Tagen anhaltender Schmerz im linken Unterbauch. Die Patientin gibt an, dass der Schmerz heute morgen schlimmer wurde. Begleitend leichtes Fieber 38,2°C. Sie hatte in den letzten Jahren schon 2-mal ähnliche Episoden, die spontan abheilten. Sie lebt in einer modernen Wohnung mit guter Ernährung, allerdings mit eher geringem Ballaststoffgehalt.","koerperlich":"Abwehrspannung und Resistenz deutlich positiv im linken Unterbauch (LUQ), besonders Sigmoidregion. Loslaßschmerz deutlich vorhanden in LUQ. McBurney-Punkt Schmerz ist NICHT vorhanden. Darmgeräusche sind normal und präsent. Rektale Untersuchung: keine Massen, Schmerzen am linken Rektum.","vitale":"RR 128/76 mmHg, HF 88/min (normal), AF 16/min, SpO2 98%, T 37,8°C","labor":"Leukozyten 14.200/μL, CRP 8,5 mg/dL (erhöht), Kreatinin 0,9 mg/dL (normal), Hämoglobin 13,1 g/dL (normal)","bildgebung":"CT-Abdomen: Entzündetes Divertikel in Sigmoidregion. Lokalisierte Entzündung (Fett-Stranding). KEINE freie Luft. Kein Abscess. Minimale peritonale Flüssigkeit.","q":["Welche Differenzialdiagnosen kommen in Betracht?","Welche Komplikationen der Divertikulitis kennen Sie?","Was ist das therapeutische Vorgehen bei unkomplizierter Divertikulitis?","Wann ist eine elektive Sigmaresektion indiziert?"],"answers":["Appendizitis (eher rechtsseitig), Kolonkarzinom, Reizdarmsyndrom, Morbus Crohn, Ovarialpathologien bei Frauen, Harnwegsinfekt, mesenteriale Ischämie","Perforation mit Peritonitis, Abszess (perikolisch, mesokolisch, pelvin), Fistelbildung, Stenose/Ileus, Divertikelblutung (meist schmerzlos)","Leichte Fälle: ambulant mit oralen Antibiotika. Mittelschwere Fälle: stationär mit IV Antibiotika (Metronidazol + Cephalosporin), Nahrungskarenz, IV Flüssigkeit. Prüfer betont: Hansen & Stock Klassifikation Grad I (lokalisiert) erlaubt konservatives Management.","Nach 2-3 rezidivierenden Episoden ist elektive Sigmaresektion nach 4-6 Wochen empfohlen. Rezidiv-Risiko ~20% nach 1. Episode, >35% nach 2. Episode."]},
+            {"id":2,"caseName":"Kardiologie","specialty":"Kardiologie","anamnese":"55-jähriger männlicher aktiver Raucher (40 Pack-Jahre) stellt sich vor mit plötzlichem oppressivem Brustschmerz seit 40 Minuten. Schmerz ist zentral, 9/10 in Intensität. Profuse Diaphorese. Familiengeschichte: Vater hatte MI im Alter 58 Jahren. Keine vorbekannte KHK.","koerperlich":"Ängstlich, in Distress, profuse Diaphorese. Kalte, klamme Extremitäten. Herzaktion regelmäßig, HF 98/min. Normale Herzklappentöne, kein Murmur. Lungenfelder klar bilateral, keine Rasselgeräusche (wichtig: kein Herzversagen erkennbar).","vitale":"RR 128/78 mmHg, HF 98/min, AF 18/min, SpO2 97% an Raumluft, T 37,1°C","labor":"Troponin I 0,02 ng/mL (grenzwertig, frühe Messung), CK-MB 8,5 ng/mL (erhöht), Myoglobin 120 μg/L (signifikant erhöht), D-Dimer 0,4 μg/mL (normal)","bildgebung":"EKG: ST-Hebung 2-3 mm in II, III, aVF (inferiorer STEMI!), reziproke ST-Senkung in I und aVL, Q-Zacken in III sichtbar (transmural), T-Inversion in III. Muster konsistent mit RCA-Okklusion (90% Wahrscheinlichkeit).","q":["Wo liegt der Infarkt? Welche Koronararerie ist betroffen?","Nennen Sie Komplikationen des inferioren STEMI.","Wie ist das Reperfusions-Management?","Warum sind Nitrate bei diesem Patient kontraindiziert?"],"answers":["Inferiorer STEMI (transmural) mit RCA-Okklusion (90%) oder LCx (10%). Zeichen: ST-Hebung in II, III, aVF + reziproke ST-Senkung I, aVL + Q-Zacken = transmural.","AV-Block (2./3. Grad) weil RCA den AV-Knoten versorgt; kardiogener Schock; Kammerflimmern (~20% Risiko); Sinusknotendysfunktion; RV-STEMI (KRITISCH!). RV-STEMI Zeichen: ST-Hebung V4R.","Primäre PCI <90 min (Door-to-Balloon Zeit). Dual antiplatelet: Aspirin 600mg + P2Y12i (Clopidogrel/Ticagrelor), UFH 60-70 IU/kg bolus, Beta-Blocker für Frequenzkontrolle.","KONTRAINDIZIERT bei Verdacht auf RV-Infarkt! RV ist preload-abhängig. Nitrate reduzieren Preload → kardiogener Schock. RV-STEMI muss ausgeschlossen werden (ST-Hebung V4R)."]},
+            {"id":3,"caseName":"Notfallmedizin","specialty":"Notfallmedizin","anamnese":"71-jährige weibliche Patientin mit Palpitationen und Dyspnoe seit 2 Stunden. Herzrasen mit irregulärem Flattermuster. Bekannte Hypertonie seit 20 Jahren (Amlodipine 5mg täglich). ERSTE Episode von Palpitationen. Leugnet Brustschmerz, Synkope. Kein Fieber, keine Infektzeichen.","koerperlich":"Besorgt aber nicht in extremem Distress. Herzauskultation: schnelle, völlig unregelmäßige Herzfrequenz (klassisch für VHF). Kein Murmur. Halsvenenstaung nicht prominent. Lungenfelder klar, keine Rasselgeräusche. Normale Hautperfusion, keine Ödeme.","vitale":"RR 145/88 mmHg, HF 135/min völlig unregelmäßig (RVR), AF 18/min, SpO2 95%, T 37,3°C","labor":"Troponin I normal, BNP 180 pg/mL (grenzwertig), TSH normal (schließt Hyperthyreose aus), Elektrolyte normal, Hämoglobin normal","bildgebung":"EKG: Absolut unregelmäßiger Rhythmus, keine erkennbaren P-Wellen. Fibrillationswellen ~300-400/min atrial. Ventrikuläre Antwort völlig unregelmäßig ~135/min. Keine ST-Veränderungen, keine T-Abnormitäten.","q":["Definieren Sie VHF mit RVR und bewerten Sie das akute Gefährdungspotenzial.","Berechnen Sie den CHA2DS2-VASc-Score. Ist Antikoagulation indiziert?","Sollte man Frequenzkontrolle oder Rhythmuskontrolle anstreben?","Nennen Sie medikamentöse Optionen zur Frequenzkontrolle."],"answers":["VHF mit RVR: Chaotisches Flimmern der Atrien (300-400/min), AV-Knoten kann nicht alle blockieren, leitet viele weiter (>135/min ventrikulär). Gefährdung moderat: stabil (kein Schock), aber Risiko für Ischämie, Thromboembolie, Tachykardie-induzierte Kardiomyopathie.","Score: H(Hypertonie)=1, A(65-74 Jahre)=1, S(Stroke-Risiko)=1 = Score 3-4. Bei Frauen Score ≥3: ANTIKOAGULATION INDIZIERT mit DOAC oder Warfarin.","FREQUENZKONTROLLE als First-Line-Strategie. Begründung: einfacher zu erreichen, schneller wirksam, Prognose ist gleich wie Rhythmuskontrolle (AFFIRM Trial). Nur bei hämodynamischer Instabilität: sofortige elektrische Kardioversion.","Beta-Blocker: Metoprolol 25-100mg 3x täglich oder 2,5-5mg IV. Kalziumantagonisten: Diltiazem 120-360mg/d oder 0,25mg/kg IV; Verapamil 120-480mg/d. Digoxin 0,5-1mg Loading, dann 0,25-0,5mg/d. Amiodaron 600mg IV über 20min."]},
+            {"id":4,"caseName":"Chirurgie","specialty":"Chirurgie","anamnese":"68-jähriger männlicher Patient mit chronischer NSAR-Einnahme (Ibuprofen 400-600mg täglich seit 15 Jahren für Arthritis) stellt sich vor mit MASSIVEM akutem epigastrischem Schmerz seit 2 Stunden. Schmerz diffus über ganzen Bauch, 10/10 Intensität. Intensiver Schweiß, Übelkeit, Angst. Lange Geschichte von Dyspepsie und Sodbrennen, aber NIEMALS PPI-Therapie. Letzte Mahlzeit schwer und fettig vor 3 Stunden.","koerperlich":"Sehr krank aussehend, blass, diaphoretisch, in extremem Distress. Bauch SEHR angespannt ('Bretbauch'), vollständig konsistent mit Peritonitis. Abwehrspannung überall, nicht lokalisiert. Loslaßschmerz massiv über ganzen Bauch. Darmgeräusche abwesend oder sehr schwach (paralytischer Ileus).","vitale":"RR 102/62 mmHg (HYPOTENSION - kritisch), HF 126/min (massive Tachykardie), AF 24/min (Tachypnoe), SpO2 94%, T 38,2°C (Fieber)","labor":"Leukozyten 16.800/μL (massive Erhöhung), Laktat 2,8 mmol/L (erhöht - Gewebshypoperfusion), Kreatinin 1,4 mg/dL (leicht erhöht), Amylase 200 U/L (erhöht)","bildgebung":"Röntgen Thorax aufrecht: FREIE LUFT unter Zwerchfell (pathognomisch für perforiertes Hohlviszus!). CT-Abdomen: Perforation Vorderwand Magen (~1-1,5cm), Pneumoperitoneum, Peritonealflüssigkeit (dunkel).","q":["Erkenne die Diagnose und begründe pathophysiologisch.","Warum ist sofortige operative Intervention kritisch?","Primary Repair vs. Gastrektomie: welche Option bevorzugt?","Welche postoperativen Komplikationen sind zu erwarten?"],"answers":["Perforiertes Magengeschwür - MEDIZINISCHE NOTFALL. Diagnose: akuter massiver Schmerz bei NSAR-Patient, Bretbauch mit generalisierter Peritonitis, Schocksymptome, FREIE LUFT unter Zwerchfell (pathognomisch!), CT-Bestätigung. Pathophysiologie: chronisches NSAR → Ulkus → Schwere Mahlzeit erhöht Druck → Perforation → Peritonitis → Schock.","NOTFALL-OP SOFORT! Jede Minute Verzögerung erhöht Mortalität. Verzögerung führt zu: schnell schwerer Peritonitis, Sepsis/SIRS, kardiogener Schock, MODS, DIC, Tod wahrscheinlich >24h. Mortalität ~10% mit OP, 40-50% wenn >24h verzögert.","PRIMARY REPAIR (Vierschichtnaht + Omentoplastie/Graham Patch) ist BEVORZUGT. GASTREKTOMIE nur bei: Malignität-Verdacht, riesiges Ulkus, Multiple Perforationen, vorherige Reparatur fehlgeschlagen, Zollinger-Ellison.","Intraoperativ: Peritonealverschmutzung, Blutung. Postoperativ: Sepsis ~40-60%, Naht-Insuffizienz ~5-10%, Pankreatitis, paralytischer Ileus, GI-Blutung, ARF, Gastric Outlet Obstruction später. Mit prompter OP: Überlebensrate gut, aber Morbidität ~30-40%."]},
+            {"id":5,"caseName":"Neurologie","specialty":"Neurologie","anamnese":"74-jähriger männlicher Patient erwacht mit rechtsseitiger Armparese und Sprachstörung vor etwa 90 Minuten. Im Zeitfenster für Thrombolyse! Lange Geschichte: Hypertonie seit 40 Jahren (schlecht kontrolliert, SBP oft >160). Bekannt Vorhofflimmern seit 5 Jahren (NICHT antikoaguliert - Patient lehnte ab). Frühere TIA vor 2 Jahren (resolvierte). Raucht NICHT.","koerperlich":"Alert aber Expressiv-Aphasie vorhanden. NIHSS ca. 8 (moderat). Fazialis-Parese rechts (mild), Arm-Kraft rechts 4/5 (leichte bis moderate Parese), Bein-Kraft rechts 5/5 (NORMAL). Keine Ataxie erkennbar. Keine visuellen Feldefekte. Sprachverständnis OK.","vitale":"RR 162/92 mmHg (erhöht), HF 88/min (unregelmäßig - VHF erkennbar), AF 18/min, SpO2 96%, T 37,0°C","labor":"Glucose 145 mg/dL (leicht erhöht), INR 0,9 (NICHT antikoaguliert - wichtig!), Thrombozyten 220.000/μL (normal), PT/aPTT normal","bildgebung":"CT Schädel: KEINE akute Blutung! (kritisch für rtPA-Eligibilität). Diffusion-MRT: neue ischämische Läsion in rechter MCA-Versorgung.","q":["Ist rtPA-Thrombolyse indiziert? Im Zeitfenster? Kontraindikationen?","Nach welcher Klassifikation (TOAST) ist dieser Schlaganfall?","Beschreiben Sie Sofort- und Langzeitmanagement detailliert.","Wie ist das Blutdruck-Management mit rtPA?"],"answers":["Ja, Patient ist IM ZEITFENSTER: 90 min <4,5 Stunden. KEINE absoluten Kontraindikationen: CT zeigt KEINE Blutung (schließt ICH aus), INR 0,9 (nicht antikoaguliert), Thrombozyten normal, keine aktive Blutung, Glucose 145 (<200).","CARDIOEMBOLIC (wahrscheinlich): VHF seit 5 Jahren, NICHT antikoaguliert → Thrombusbild in linkem Atrium, MCA-Verteilung (nicht lacunar), größere Symptome. DD: Large Vessel Thrombosis.","rtPA 0,9 mg/kg IV (Patient ~75kg = ~72mg): 10% bolus 1 min, Rest 60 min. Neuro-Monitoring q30min. Repeat CT 24h nach rtPA. Antikoagulation ab 24h: DOAC bevorzugt. Statine hochdosiert (Atorvastatin 80mg), Rehabilitation sofort. BP-Kontrolle: Ziel <140/90 nach Stabilisierung.","rtPA erfordert aggressivere BP-Kontrolle als normal. Ziel: SBP <180, DBP <110. Diese Patient SBP 162 = OK (unter Schwelle von 220/120 für Kontraindikation). Vorsicht: aggressive Senkung nach rtPA kann Ischämie durch Reduktion Perfusion der Penumbra vergrößern."]},
+            {"id":6,"caseName":"Notfallmedizin","specialty":"Notfallmedizin","anamnese":"71-jährige Patientin mit rezidivierender Harnwegsinfektionen stellt sich vor mit akutem Beginn: plötzliche Verwirrtheit, Schüttelfrost. Partner berichtet Patientin war am Vortag mit einfachen Urin-Symptomen (Dysurie, Pollakisurie). Heute morgen: HEFTIGE Verwirrtheit (kann nicht Namen ihrer Enkel sagen), Schüttelfrost. Patientin fühlt sich sehr KALT obwohl T 39,8°C (klassisch für Sepsis). Bekannt: Diabetes Typ 2, CKD Stadium 3.","koerperlich":"Verwirrt, somnolent, nicht voll alert (KRITISCH!). Haut sehr marmoliert und livid. Extremitäten: SEHR kalt und cyanotisch. Kapillar-Refill >2 Sekunden. CVA-Klopfschmerz POSITIV beidseits (Pyelonephritis!). Abdomen: weich, keine Peritonitis.","vitale":"RR 92/56 mmHg (KRITISCH hypotensiv = Schock!), HF 118/min (Tachykardie), AF 22/min (Tachypnoe), SpO2 94%, T 39,8°C","labor":"Leukozyten 18.500/μL (massive Erhöhung), Thrombozyten 95.000/μL (NIEDRIG = DIC-Signal), Kreatinin 2,1 mg/dL (STARK erhöht), Bilirubin 2,2 mg/dL (erhöht), PT 16 sec (prolongiert), aPTT 42 sec (prolongiert), Laktat 3,2 mmol/L (erhöht)","bildgebung":"Röntgen Thorax: Bilaterale Infiltrate (Pneumonie/Lungenödem). Sonographie Abdomen: BILATERALE Hydronephrose (KRITISCH! Urin obstruiert oberhalb Obstruction).","q":["Definieren Sie Sepsis, Sepsis schwer, und septischer Schock nach Sepsis-3.","Identifizieren Sie die Infektionsquelle. Warum ist die Hydronephrose kritisch?","Beschreiben Sie den 6-Stunden-Bundle detailliert.","Rolle von Vasopressoren, Flüssigkeitsmanagement, und Urology-Intervention: Timing und Dringlichkeit?"],"answers":["Sepsis: vermutete/bewiesene Infektion + SIRS-Kriterien erfüllt (Temperatur >38, HF >90, AF >20, Leukozyten >12.000). Diese Patientin erfüllt ALLE + Organversagen = SEPTISCHER SCHOCK (Hypotension + Laktat erhöht).","Wahrscheinliche Quelle: UROSEPSIS von rezidivierender HWI. KRITISCH: Bilaterale Hydronephrose = Urin obstruiert, sammelt sich oberhalb Obstruction! Diese Stase mit Infektion erhöht Bakteriämie-Risiko MASSIV.","6h-Bundle: (1) Blutkultur vor AB; (2) Breites Spektrum AB innerhalb 1h: Ceftriaxon 2g + Gentamicin 3-5mg/kg + Vancomycin; (3) IV-Flüssigkeit: Lactated Ringer's 30mL/kg über 3h; (4) Vasopressor (Norepinephrin) wenn Hypotension persistiert; (5) CT Abdomen mit Kontrast; (6) Kontinuierliche Überwachung.","Vasopressoren: Norepinephrin 0,05-2 μg/kg/min (Ziel MAP ≥65) wenn Hypotension persistiert. Flüssigkeit: 30mL/kg Bolus (begrenzen wenn ARDS-Zeichen). KRITISCH: Infected obstructed system erfordert DRINGENDE Urology-Intervention (Ureteral Stents oder perkutane Nephrostomie) innerhalb FEW STUNDEN! Mortalität 20-50% ohne schnelle Drainage."]}
+        ];
+
+        let currentMode = 'single';
+        let currentCaseIndex = 0;
+        let progress = {};
+
+        function initApp() {
+            loadProgress();
+            document.getElementById('totalCount').textContent = allCases.length;
+            displayCase();
+            updateStats();
+        }
+
+        function displayCase() {
+            if (allCases.length === 0) return;
+
+            const caseIndex = currentMode === 'single' ? currentCaseIndex : Math.floor(Math.random() * allCases.length);
+            const caseData = allCases[caseIndex];
+
+            let html = `
+                <div class="case-layout">
+                    <div class="case-column">
+                        <div class="case-header">
+                            <div class="case-title">${caseData.caseName}</div>
+                            <div class="case-meta">Fall ${caseData.id} | ${caseData.specialty}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">📋 Anamnese</div>
+                            <div class="section-content">${caseData.anamnese}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">🔍 Körperliche Untersuchung</div>
+                            <div class="section-content">${caseData.koerperlich}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">📊 Vitale Zeichen</div>
+                            <div class="section-content">${caseData.vitale}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">🧪 Laborergebnisse</div>
+                            <div class="section-content">${caseData.labor}</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">🖼️ Bildgebung & EKG</div>
+                            <div class="section-content">${caseData.bildgebung}</div>
+                        </div>
+                    </div>
+
+                    <div class="questions-column">
+                        <div class="questions-section">
+                            <h3>❓ Fragen</h3>
+                            ${caseData.q.map((q, idx) => `
+                                <div class="question-block">
+                                    <div class="question-text">Frage ${idx + 1}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">${q}</div>
+                                    <textarea id="answer_${idx}" placeholder="Antwort..."></textarea>
+                                </div>
+                            `).join('')}
+
+                            <div class="button-group">
+                                <button class="btn btn-success" onclick="submitAnswers(${caseData.id})">✓ Einreichen</button>
+                                <button class="btn" onclick="nextCase()">→ Nächster</button>
+                            </div>
+
+                            <div id="ratingSection_${caseData.id}" class="rating-section">
+                                <div class="rating-title">Selbstbewertung:</div>
+                                <div class="rating-buttons">
+                                    <button class="btn btn-success" onclick="rateAnswers(${caseData.id}, 'correct')">✓ Korrekt</button>
+                                    <button class="btn btn-warning" onclick="rateAnswers(${caseData.id}, 'sufficient')">~ Ausreichend</button>
+                                    <button class="btn btn-danger" onclick="rateAnswers(${caseData.id}, 'incorrect')">✗ Falsch</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('caseContainer').innerHTML = html;
+        }
+
+        function submitAnswers(caseId) {
+            const ratingSection = document.getElementById(`ratingSection_${caseId}`);
+            if (ratingSection) ratingSection.classList.add('show');
+        }
+
+        function rateAnswers(caseId, rating) {
+            progress[caseId] = rating;
+            saveProgress();
+            updateStats();
+            showFeedback(caseId);
+            setTimeout(nextCase, 2000);
+        }
+
+        function showFeedback(caseId) {
+            const caseData = allCases.find(c => c.id === caseId);
+            if (!caseData) return;
+
+            let feedbackHTML = `<div class="feedback-header">💡 Musterlösungen</div>`;
+            caseData.q.forEach((q, idx) => {
+                feedbackHTML += `
+                    <div class="feedback-item">
+                        <div class="feedback-q-text">Frage ${idx + 1}: ${q}</div>
+                        <div class="solution-answer">${caseData.answers[idx]}</div>
+                    </div>
+                `;
+            });
+
+            const feedbackContainer = document.getElementById('feedback');
+            feedbackContainer.innerHTML = feedbackHTML;
+            feedbackContainer.classList.add('show');
+            feedbackContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function nextCase() {
+            currentCaseIndex = (currentCaseIndex + 1) % allCases.length;
+            document.getElementById('feedback').classList.remove('show');
+            displayCase();
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            currentCaseIndex = 0;
+            document.querySelectorAll('.mode-selector .btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            displayCase();
+        }
+
+        function updateStats() {
+            const completed = Object.keys(progress).length;
+            const total = allCases.length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('progressPct').textContent = percentage + '%';
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+
+        function saveProgress() {
+            localStorage.setItem('kp_progress', JSON.stringify(progress));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('kp_progress');
+            progress = saved ? JSON.parse(saved) : {};
+        }
+
+        function exportProgress() {
+            const dataStr = JSON.stringify(progress, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'kp_progress_' + new Date().getTime() + '.json';
+            link.click();
+        }
+
+        function importProgress() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        progress = JSON.parse(event.target.result);
+                        saveProgress();
+                        updateStats();
+                        alert('Fortschritt importiert!');
+                    } catch (err) {
+                        alert('Fehler beim Importieren');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function resetProgress() {
+            if (confirm('Alle Fortschritte löschen?')) {
+                progress = {};
+                localStorage.removeItem('kp_progress');
+                updateStats();
+                displayCase();
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
